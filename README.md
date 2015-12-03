@@ -41,6 +41,8 @@ The real actions in all those tasks are just to echo some messages to the consol
 
 ## Describe your job as a workflow
 ```python
+#!/usr/bin/env python
+
 import mass
 from mass import Job, Task, Action
 
@@ -64,6 +66,8 @@ Two ways to start a worker.
 One way is by Python:
 
 ```python
+#!/usr/bin/env python
+
 import mass
 from mass.workers.swf_worker import SWFWorker
 
@@ -83,6 +87,8 @@ There are also two ways to submit a job.
 
 One is by Python
 ```python
+#!/usr/bin/env python
+
 import mass
 
 mass.start(a_job)
@@ -161,6 +167,7 @@ There are several ways to describe a job. Currently, three methods are supported
 ## Python Script
 
 ```python
+#!/usr/bin/env python
 
 import mass
 from mass import Job, Task, Action
@@ -170,13 +177,13 @@ with Job(title="", serialsubtasks=True) as a_job:
         Action("youtube-dl https://www.youtube.com/watch?v=BI23U7U2aUY -o storytelling.mp4")
     with Task("Transcoding"):
         with Task("Transcoding to profile #0"):
-	    Action("ffmpeg -loglevel fatal -y -i storytelling.mp4 -c:v libx264 -b:v 128k -c:a copy -pass 1 -f mp4 /dev/null")
-	    Action("ffmpeg -loglevel fatal -y -i storytelling.mp4 -c:v libx264 -b:v 128k -c:a copy -pass 2 -f mp4 output_0.mp4")
+            Action("ffmpeg -loglevel fatal -y -i storytelling.mp4 -c:v libx264 -b:v 128k -c:a copy -pass 1 -f mp4 /dev/null")
+            Action("ffmpeg -loglevel fatal -y -i storytelling.mp4 -c:v libx264 -b:v 128k -c:a copy -pass 2 -f mp4 output_0.mp4")
         with Task("Transcoding to profile #1"):
-	    Action("ffmpeg -loglevel fatal -y -i storytelling.mp4 -c:v libx264 -b:v 250k -c:a copy -pass 1 -f mp4 /dev/null")
-	    Action("ffmpeg -loglevel fatal -y -i storytelling.mp4 -c:v libx264 -b:v 250k -c:a copy -pass 2 -f mp4 output_1.mp4")
+            Action("ffmpeg -loglevel fatal -y -i storytelling.mp4 -c:v libx264 -b:v 250k -c:a copy -pass 1 -f mp4 /dev/null")
+            Action("ffmpeg -loglevel fatal -y -i storytelling.mp4 -c:v libx264 -b:v 250k -c:a copy -pass 2 -f mp4 output_1.mp4")
         with Task("Transcoding to profile #2, audio only"):
-	    Action("ffmpeg -loglevel fatal -y -i storytelling.mp4 -vn -c:a libfdk_aac -b:a 96k output_2.mp4")
+            Action("ffmpeg -loglevel fatal -y -i storytelling.mp4 -vn -c:a libfdk_aac -b:a 96k output_2.mp4")
 
 mass.submit(a_job)
 ```
