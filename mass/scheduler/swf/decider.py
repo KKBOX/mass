@@ -12,7 +12,7 @@ import socket
 import boto3
 
 # local modules
-from mass.workers.swf.decisions import Decisions
+from mass.scheduler.swf.decisions import Decisions
 
 
 class Decider:

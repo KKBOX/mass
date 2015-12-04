@@ -81,7 +81,7 @@ def register_activity_type():
             description='The SWF activity type for Cmd of Mass.',
             defaultTaskStartToCloseTimeout=str(config.ACTIVITY_TASK_START_TO_CLOSE_TIMEOUT),
             defaultTaskHeartbeatTimeout=str(config.ACTIVITY_HEARTBEAT_TIMEOUT),
-            defaultTaskList={'name': config.DEFAULT_ACTIVITY_TASK_LIST},
+            defaultTaskList={'name': config.ACTIVITY_TASK_LIST},
             defaultTaskPriority='1',
             defaultTaskScheduleToStartTimeout=str(config.ACTIVITY_TASK_START_TO_CLOSE_TIMEOUT),
             defaultTaskScheduleToCloseTimeout=str(config.ACTIVITY_TASK_START_TO_CLOSE_TIMEOUT)

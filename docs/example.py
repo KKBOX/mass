@@ -5,7 +5,7 @@
 # local modules
 import mass
 from mass import Job, Task, Action
-from mass.workers.swf_worker import SWFWorker
+from mass.scheduler.swf import SWFWorker
 
 with Job("Echo Job") as a_job:
     with Task("Task #1"):

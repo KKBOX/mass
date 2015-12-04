@@ -17,8 +17,8 @@ import pytest
 
 # local modules
 from mass import Job, Task, Action
-from mass.workers.swf import config
-from mass.workers.swf_worker import SWFWorker
+from mass.scheduler.swf import config
+from mass.scheduler.swf import SWFWorker
 import mass
 
 
@@ -46,14 +46,14 @@ def worker(request):
 
 
 @pytest.yield_fixture
-def start_job(monkeypatch):
+def submit_job(monkeypatch):
 
-    def start(job):
-        workflow_id, run_id = mass.start(job)
+    def submitter(job):
+        workflow_id, run_id = mass.submit(job)
         monkeypatch.setenv('TEST_WORKFLOW_ID', workflow_id)
         monkeypatch.setenv('TEST_RUN_ID', run_id)
         return workflow_id, run_id
-    yield start
+    yield submitter
 
     # terminate workflow if not done.
     workflow_id = os.environ.get('TEST_WORKFLOW_ID', None)
@@ -111,12 +111,12 @@ def get_close_status(workflow_id, run_id):
         return info['executionInfo']['closeStatus']
 
 
-def test_start_job(worker, start_job):
+def test_start_job(worker, submit_job):
     with Job('Job') as job:
         with Task('Task'):
             Action(msg='Action here at $(date).', _role='echo')
 
-    workflow_id, run_id = start_job(job)
+    workflow_id, run_id = submit_job(job)
 
     while not is_job_done(workflow_id, run_id):
         print('wait')
@@ -124,12 +124,12 @@ def test_start_job(worker, start_job):
     assert get_close_status(workflow_id, run_id) == 'COMPLETED'
 
 
-def test_unexpected_keywork_arguments_of_action(worker, start_job):
+def test_unexpected_keywork_arguments_of_action(worker, submit_job):
     with Job('Job') as job:
         with Task('Task'):
             Action(wrong_input='Action here at $(date).', _role='echo')
 
-    workflow_id, run_id = start_job(job)
+    workflow_id, run_id = submit_job(job)
 
     while not is_job_done(workflow_id, run_id):
         print('wait')
@@ -142,14 +142,14 @@ def test_unexpected_keywork_arguments_of_action(worker, start_job):
         break
 
 
-def test_parallel_tasks(worker, start_job):
+def test_parallel_tasks(worker, submit_job):
     with Job('Job', parallel=True) as job:
         with Task('Task1'):
             Action(cmd='sleep 10', _role='shell')
         with Task('Task2'):
             Action(cmd='sleep 8', _role='shell')
 
-    workflow_id, run_id = start_job(job)
+    workflow_id, run_id = submit_job(job)
 
     while not is_job_done(workflow_id, run_id):
         print('wait')

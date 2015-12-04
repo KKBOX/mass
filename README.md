@@ -69,7 +69,7 @@ One way is by Python:
 #!/usr/bin/env python
 
 import mass
-from mass.workers.swf_worker import SWFWorker
+from mass.scheduler.swf import SWFWorker
 
 worker = SWFWorker()
 worker.start()
@@ -91,7 +91,7 @@ One is by Python
 
 import mass
 
-mass.start(a_job)
+mass.submit(a_job)
 ```
 
 The other is through cli:

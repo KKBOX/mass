@@ -9,8 +9,8 @@ import click
 
 # local modules
 from mass.monitor.app import app
-from mass.workers.swf import utils
-from mass.workers.swf_worker import SWFWorker
+from mass.scheduler.swf import utils
+from mass.scheduler.swf import SWFWorker
 
 
 @click.group()

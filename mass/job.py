@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""This module provides Job, Task and Cmd class to generate mass job.
+"""This module provides Job, Task and Action class to generate mass job.
 
 Example:
 
@@ -12,11 +12,11 @@ with Job('Job Title') as job:
 
 
 class Base(dict):
-    """The base object of Job, Task and Cmd
+    """The base object of Job, Task and Action
 
-    "Base" maintains the parent-child relationship of Job/Task/Cmd by implementing
-    the __enter__ and __exit__ with a private stack. Every object within the
-    with statement of parent is appended as child of parent.
+    "Base" maintains the parent-child relationship of Job/Task/Action by
+    implementing the __enter__ and __exit__ with a private stack. Every object
+    within the with statement of parent is appended as child of parent.
     """
 
     __stack = []

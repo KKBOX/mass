@@ -11,10 +11,10 @@ import json
 import boto3
 
 # local modules
-from mass.workers.swf import config
+from mass.scheduler.swf import config
 
 
-def start(job, priority=1):
+def submit(job, priority=1):
     """Submit mass job to SWF with specific priority.
     """
     client = boto3.client('swf', region_name=config.REGION)
