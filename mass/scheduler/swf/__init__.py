@@ -18,10 +18,10 @@ import boto3
 
 # local modules
 from mass.exception import TaskError, TaskWait
-from mass.worker import BaseWorker
-from mass.workers.swf import config
-from mass.workers.swf.action import ActionHandler
-from mass.workers.swf.decider import Decider
+from mass.scheduler.worker import BaseWorker
+from mass.scheduler.swf import config
+from mass.scheduler.swf.action import ActionHandler
+from mass.scheduler.swf.decider import Decider
 
 
 class SWFDecider(Decider):
@@ -100,7 +100,7 @@ class SWFDecider(Decider):
                 activity_id=self.handler.get_next_activity_name(),
                 activity_type_name=config.ACTIVITY_TYPE_FOR_CMD['name'],
                 activity_type_version=config.ACTIVITY_TYPE_FOR_CMD['version'],
-                task_list=action['Action'].get('_role', config.DEFAULT_ACTIVITY_TASK_LIST),
+                task_list=action['Action'].get('_role', config.ACTIVITY_TASK_LIST),
                 task_priority=str(self.handler.priority),
                 control=None,
                 heartbeat_timeout=str(60),

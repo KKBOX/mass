@@ -16,24 +16,24 @@ WORKFLOW_TYPE_FOR_TASK = {'name': 'Task', 'version': '0.1'}
 # The SWF activity type for Cmd.
 ACTIVITY_TYPE_FOR_CMD = {'name': 'Cmd', 'version': '0.1'}
 
-# The total duration for workflow execution.
-WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT = 7 * 24 * 60 * 60
+# The default task list to use for the decision tasks.
+DECISION_TASK_LIST = 'mass'
 
-# The total duration for activity task.
-ACTIVITY_TASK_START_TO_CLOSE_TIMEOUT = 7 * 24 * 60 * 60
-
-# The heartbeat timeout of activity task.
-ACTIVITY_HEARTBEAT_TIMEOUT = 60 * 60
+# The default task list to use for the activity tasks.
+ACTIVITY_TASK_LIST = 'mass'
 
 # Specifies the policy to use for the child workflow executions if parent
 # workflow is terminated
 WORKFLOW_CHILD_POLICY = 'TERMINATE'  # TERMINATE | REQUEST_CANCEL | ABANDON
 
-# The task list to use for the decision tasks.
-DECISION_TASK_LIST = 'mass'
+# The timeout limit for workflow execution in second.
+WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT = 7 * 24 * 60 * 60
 
-# The default task list to use for the activity tasks.
-DEFAULT_ACTIVITY_TASK_LIST = 'mass'
-
-# Specifies the maximum duration of decision tasks.
+# The timeout limit for decision task in second.
 DECISION_TASK_START_TO_CLOSE_TIMEOUT = 60
+
+# The timeout limit for activity task in second.
+ACTIVITY_TASK_START_TO_CLOSE_TIMEOUT = 7 * 24 * 60 * 60
+
+# The heartbeat timeout for activity task in second.
+ACTIVITY_HEARTBEAT_TIMEOUT = 60 * 60
