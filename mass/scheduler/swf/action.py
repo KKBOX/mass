@@ -55,6 +55,19 @@ class Action(object):
     def action_id(self):
         return int(self.name().split('-')[-1])
 
+    def created_time(self):
+        init_event = self.init_event()
+        if not init_event:
+            return None
+        return init_event.event_timestamp
+
+    def error(self):
+        events = [e for e in self._events if e.event_type.endswith('Failed')]
+        if not events:
+            return None
+        else:
+            return ActionError(events[0].reason, events[0].details)
+
     def init_event(self):
         raise NotImplementedError
 
@@ -64,20 +77,8 @@ class Action(object):
     def name(self):
         raise NotImplementedError
 
-    def type(self):
-        return self.__class__.__name__
-
-    def created_time(self):
-        init_event = self.init_event()
-        if not init_event:
-            return None
-        return init_event.event_timestamp
-
     def priority(self):
         return int(self.init_event().task_priority)
-
-    def status(self):
-        return self._events[-1].event_type.replace(self.type(), '')
 
     def result(self):
         events = [e for e in self._events if e.event_type.endswith('Completed')]
@@ -99,15 +100,14 @@ class Action(object):
     def should_retry(self):
         return self.retry_count() < self._max_retry_count
 
+    def status(self):
+        return self._events[-1].event_type.replace(self.type(), '')
+
     def task_list(self):
         return self.init_event().task_list.get('name', None)
 
-    def error(self):
-        events = [e for e in self._events if e.event_type.endswith('Failed')]
-        if not events:
-            return None
-        else:
-            return ActionError(events[0].reason, events[0].details)
+    def type(self):
+        return self.__class__.__name__
 
 
 class ActivityTask(Action):
