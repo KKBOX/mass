@@ -32,7 +32,10 @@ class SWFDecider(Decider):
         events = self.poll(task_list)
         if not events:
             return
-        self.handler = ActionHandler(events)
+        self.handler = ActionHandler(
+            events,
+            activity_max_retry=config.ACTIVITY_MAX_RETRY,
+            workflow_max_retry=config.WORKFLOW_MAX_RETRY)
         try:
             result = self.execute()
             if self.handler.is_waiting():
@@ -140,13 +143,45 @@ class SWFDecider(Decider):
             if not action:
                 return
             elif action.status() == 'Failed':
-                error = action.error()
-                action.is_checked = True
-                raise TaskError(error.reason, error.details)
+                if action.should_retry():
+                    self.retry(action)
+                    raise TaskWait
+                else:
+                    error = action.error()
+                    action.is_checked = True
+                    raise TaskError(error.reason, error.details)
             elif action.status() == 'TimedOut':
                 raise TaskError('TimedOut')
             else:
                 return action.result()
+
+    def retry(self, action):
+        if action.type() == 'ActivityTask':
+            self.decisions.schedule_activity_task(
+                activity_id=action.retry_name(),
+                activity_type_name=config.ACTIVITY_TYPE_FOR_CMD['name'],
+                activity_type_version=config.ACTIVITY_TYPE_FOR_CMD['version'],
+                task_list=action.task_list(),
+                task_priority=str(action.priority()),
+                control=None,
+                heartbeat_timeout=str(60),
+                schedule_to_close_timeout=str(config.ACTIVITY_TASK_START_TO_CLOSE_TIMEOUT),
+                schedule_to_start_timeout=str(config.ACTIVITY_TASK_START_TO_CLOSE_TIMEOUT),
+                start_to_close_timeout=str(config.ACTIVITY_TASK_START_TO_CLOSE_TIMEOUT),
+                input=json.dumps(action.input()))
+        elif action.type() == 'ChildWorkflowExecution':
+            self.decisions.start_child_workflow_execution(
+                workflow_id=action.retry_name(),
+                workflow_type_name=config.WORKFLOW_TYPE_FOR_TASK['name'],
+                workflow_type_version=config.WORKFLOW_TYPE_FOR_TASK['version'],
+                task_list=config.DECISION_TASK_LIST,
+                task_priority=str(action.priority()),
+                tag_list=action.tag_list(),
+                child_policy=config.WORKFLOW_CHILD_POLICY,
+                control=None,
+                execution_start_to_close_timeout=str(config.WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT),
+                task_start_to_close_timeout=str(config.DECISION_TASK_START_TO_CLOSE_TIMEOUT),
+                input=json.dumps(action.input()))
 
 
 class SWFWorker(BaseWorker):
