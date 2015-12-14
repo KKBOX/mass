@@ -109,6 +109,25 @@ class SWFDecider(Decider):
                 start_to_close_timeout=str(config.ACTIVITY_TASK_START_TO_CLOSE_TIMEOUT),
                 input=json.dumps(action))
 
+    def fail(self, reason, details):
+        try:
+            type_ = 'Job' if 'Job' in self.handler.input else 'Task'
+            actions = filter(lambda c: 'Action' in c, self.handler.input[type_]['children'])
+            error_handlers = filter(lambda a: a['Action']['_whenerror'], actions)
+            for action in error_handlers:
+                self.execute_action(action)
+                self.wait()
+        except TaskWait:
+            self.suspend()
+        except TaskError:
+            _, error, _ = sys.exc_info()
+            super().fail(error.reason, error.details)
+        except:
+            _, error, _ = sys.exc_info()
+            super().fail(repr(error), json.dumps(traceback.format_exc()))
+        else:
+            super().fail(reason, details)
+
     def wait(self):
         """Check if the next Task/Action could be processed. If the previous
         Task/Action is submitted to SWF, processed and successful, return
@@ -122,6 +141,7 @@ class SWFDecider(Decider):
                 return
             elif action.status() == 'Failed':
                 error = action.error()
+                action.is_checked = True
                 raise TaskError(error.reason, error.details)
             elif action.status() == 'TimedOut':
                 raise TaskError('TimedOut')
