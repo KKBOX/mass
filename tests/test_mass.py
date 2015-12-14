@@ -179,3 +179,17 @@ def test_parallel_tasks(worker, submit_job):
         task = '-'.join(wid.split('-')[:-6])
         start_time[task] = arrow.get(event['eventTimestamp'])
     assert abs(start_time['Task1'] - start_time['Task2']) < timedelta(seconds=5)
+
+
+def test_handle_task_error(worker, submit_job):
+    with Job('Job') as job:
+        with Task(title='Task'):
+            Action(cmd='fakecmd', _role='shell')
+            Action(cmd='echo "an error occurred"', _role='shell', _whenerror=True)
+
+    workflow_id, run_id = submit_job(job)
+
+    while not is_job_done(workflow_id, run_id):
+        print('wait')
+        time.sleep(3)
+    assert get_close_status(workflow_id, run_id) == 'FAILED'
