@@ -97,6 +97,6 @@ class Action(Base):
             function.
     """
 
-    def __init__(self, *, _role=None, **kwargs):
-        super().__init__(_role=_role, **kwargs)
+    def __init__(self, *, _role=None, _whenerror=False, **kwargs):
+        super().__init__(_role=_role, _whenerror=_whenerror, **kwargs)
         self['Action'].pop('children')

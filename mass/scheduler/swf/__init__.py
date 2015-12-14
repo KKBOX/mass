@@ -56,7 +56,7 @@ class SWFDecider(Decider):
         for child in self.handler.input[type_]['children']:
             if 'Task' in child:
                 self.execute_task(child)
-            elif 'Action' in child:
+            elif 'Action' in child and not child['Action']['_whenerror']:
                 self.execute_action(child)
 
             if not parallel:
