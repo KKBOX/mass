@@ -90,8 +90,8 @@ class ActivityTask(Action):
     def init_event(self):
         events = [e for e in self._events if e.event_type.endswith('Scheduled')]
         if not events:
-            return None
-        return events[0]
+            events = [e for e in self._events if e.event_type == 'ScheduleActivityTaskFailed']
+        return events[0] if events else None
 
 
 class ChildWorkflowExecution(Action):
@@ -99,8 +99,8 @@ class ChildWorkflowExecution(Action):
     def init_event(self):
         events = [e for e in self._events if e.event_type.endswith('Initiated')]
         if not events:
-            return None
-        return events[0]
+            events = [e for e in self._events if e.event_type == 'StartChildWorkflowExecutionFailed']
+        return events[0] if events else None
 
 
 class ActionHandler(object):
