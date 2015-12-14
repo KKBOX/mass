@@ -52,11 +52,8 @@ class Action(object):
         self._events = events
         self._max_retry_count = max_retry_count
 
-    def init_event(self):
-        raise NotImplementedError
-
-    def type(self):
-        return self.__class__.__name__
+    def action_id(self):
+        return int(self.name().split('-')[-1])
 
     def created_time(self):
         init_event = self.init_event()
@@ -64,8 +61,24 @@ class Action(object):
             return None
         return init_event.event_timestamp
 
-    def status(self):
-        return self._events[-1].event_type.replace(self.type(), '')
+    def error(self):
+        events = [e for e in self._events if e.event_type.endswith('Failed')]
+        if not events:
+            return None
+        else:
+            return ActionError(events[0].reason, events[0].details)
+
+    def init_event(self):
+        raise NotImplementedError
+
+    def input(self):
+        return json.loads(self.init_event().input)
+
+    def name(self):
+        raise NotImplementedError
+
+    def priority(self):
+        return int(self.init_event().task_priority)
 
     def result(self):
         events = [e for e in self._events if e.event_type.endswith('Completed')]
@@ -77,12 +90,24 @@ class Action(object):
             except AttributeError:
                 return json.loads('null')
 
-    def error(self):
-        events = [e for e in self._events if e.event_type.endswith('Failed')]
-        if not events:
-            return None
-        else:
-            return ActionError(events[0].reason, events[0].details)
+    def retry_count(self):
+        raise NotImplementedError
+
+    def retry_name(self):
+        retry_id = self.action_id() + self.retry_count() + 1
+        return '-'.join(self.name().split('-')[:-1] + [str(retry_id)])
+
+    def should_retry(self):
+        return self.retry_count() < self._max_retry_count
+
+    def status(self):
+        return self._events[-1].event_type.replace(self.type(), '')
+
+    def task_list(self):
+        return self.init_event().task_list.get('name', None)
+
+    def type(self):
+        return self.__class__.__name__
 
 
 class ActivityTask(Action):
@@ -90,8 +115,16 @@ class ActivityTask(Action):
     def init_event(self):
         events = [e for e in self._events if e.event_type.endswith('Scheduled')]
         if not events:
-            return None
-        return events[0]
+            events = [e for e in self._events if e.event_type == 'ScheduleActivityTaskFailed']
+        return events[0] if events else None
+
+    def name(self):
+        return self.init_event().activity_id
+
+    def retry_count(self):
+        retry_count = sum(
+            [1 for e in self._events if e.event_type.endswith('Scheduled')]) - 1
+        return retry_count
 
 
 class ChildWorkflowExecution(Action):
@@ -99,8 +132,19 @@ class ChildWorkflowExecution(Action):
     def init_event(self):
         events = [e for e in self._events if e.event_type.endswith('Initiated')]
         if not events:
-            return None
-        return events[0]
+            events = [e for e in self._events if e.event_type == 'StartChildWorkflowExecutionFailed']
+        return events[0] if events else None
+
+    def name(self):
+        return self.init_event().workflow_id
+
+    def retry_count(self):
+        retry_count = sum(
+            [1 for e in self._events if e.event_type.endswith('Initiated')]) - 1
+        return retry_count
+
+    def tag_list(self):
+        return self.init_event().tag_list
 
 
 class ActionHandler(object):
