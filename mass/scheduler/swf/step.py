@@ -11,6 +11,9 @@ from contextlib import contextmanager
 import json
 import uuid
 
+# local modules
+from mass.scheduler.swf import config
+
 StepError = namedtuple('StepError', ['reason', 'details'])
 
 
@@ -52,9 +55,6 @@ class Step(object):
         self._events = events
         self._max_retry_count = max_retry_count
 
-    def id(self):
-        return int(self.name().split('-')[-1])
-
     def created_time(self):
         init_event = self.init_event()
         if not init_event:
@@ -90,11 +90,15 @@ class Step(object):
             except AttributeError:
                 return json.loads('null')
 
+    def retry(self, decisions):
+        raise NotImplementedError
+
     def retry_count(self):
         raise NotImplementedError
 
     def retry_name(self):
-        retry_id = self.id() + self.retry_count() + 1
+        current_id = int(self.name().split('-')[-1])
+        retry_id = current_id + self.retry_count() + 1
         return '-'.join(self.name().split('-')[:-1] + [str(retry_id)])
 
     def should_retry(self):
@@ -121,10 +125,33 @@ class ActivityTask(Step):
     def name(self):
         return self.init_event().activity_id
 
+    def retry(self, decisions):
+        self.schedule(
+            decisions=decisions,
+            name=self.retry_name(),
+            input_data=self.input(),
+            task_list=self.task_list(),
+            priority=self.priority())
+
     def retry_count(self):
         retry_count = sum(
             [1 for e in self._events if e.event_type.endswith('Scheduled')]) - 1
         return retry_count
+
+    @classmethod
+    def schedule(cls, decisions, name, input_data, task_list, priority):
+        decisions.schedule_activity_task(
+            activity_id=name,
+            activity_type_name=config.ACTIVITY_TYPE_FOR_CMD['name'],
+            activity_type_version=config.ACTIVITY_TYPE_FOR_CMD['version'],
+            task_list=task_list,
+            task_priority=str(priority),
+            control=None,
+            heartbeat_timeout=str(config.ACTIVITY_HEARTBEAT_TIMEOUT),
+            schedule_to_close_timeout=str(config.ACTIVITY_TASK_START_TO_CLOSE_TIMEOUT),
+            schedule_to_start_timeout=str(config.ACTIVITY_TASK_START_TO_CLOSE_TIMEOUT),
+            start_to_close_timeout=str(config.ACTIVITY_TASK_START_TO_CLOSE_TIMEOUT),
+            input=json.dumps(input_data))
 
 
 class ChildWorkflowExecution(Step):
@@ -138,10 +165,33 @@ class ChildWorkflowExecution(Step):
     def name(self):
         return self.init_event().workflow_id
 
+    def retry(self, decisions):
+        self.start(
+            decisions=decisions,
+            name=self.retry_name(),
+            input_data=self.input(),
+            tag_list=self.tag_list(),
+            priority=self.priority())
+
     def retry_count(self):
         retry_count = sum(
             [1 for e in self._events if e.event_type.endswith('Initiated')]) - 1
         return retry_count
+
+    @classmethod
+    def start(cls, decisions, name, input_data, tag_list, priority):
+        decisions.start_child_workflow_execution(
+            workflow_id=name,
+            workflow_type_name=config.WORKFLOW_TYPE_FOR_TASK['name'],
+            workflow_type_version=config.WORKFLOW_TYPE_FOR_TASK['version'],
+            task_list=config.DECISION_TASK_LIST,
+            task_priority=str(priority),
+            tag_list=tag_list,
+            child_policy=config.WORKFLOW_CHILD_POLICY,
+            control=None,
+            execution_start_to_close_timeout=str(config.WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT),
+            task_start_to_close_timeout=str(config.DECISION_TASK_START_TO_CLOSE_TIMEOUT),
+            input=json.dumps(input_data))
 
     def tag_list(self):
         return self.init_event().tag_list
