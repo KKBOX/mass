@@ -11,6 +11,9 @@ from contextlib import contextmanager
 import json
 import uuid
 
+# local modules
+from mass.scheduler.swf import config
+
 StepError = namedtuple('StepError', ['reason', 'details'])
 
 
@@ -142,6 +145,21 @@ class ChildWorkflowExecution(Step):
         retry_count = sum(
             [1 for e in self._events if e.event_type.endswith('Initiated')]) - 1
         return retry_count
+
+    @classmethod
+    def start(cls, decisions, name, input_data, tag_list, priority):
+        decisions.start_child_workflow_execution(
+            workflow_id=name,
+            workflow_type_name=config.WORKFLOW_TYPE_FOR_TASK['name'],
+            workflow_type_version=config.WORKFLOW_TYPE_FOR_TASK['version'],
+            task_list=config.DECISION_TASK_LIST,
+            task_priority=str(priority),
+            tag_list=tag_list,
+            child_policy=config.WORKFLOW_CHILD_POLICY,
+            control=None,
+            execution_start_to_close_timeout=str(config.WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT),
+            task_start_to_close_timeout=str(config.DECISION_TASK_START_TO_CLOSE_TIMEOUT),
+            input=json.dumps(input_data))
 
     def tag_list(self):
         return self.init_event().tag_list

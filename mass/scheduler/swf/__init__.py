@@ -20,7 +20,7 @@ import boto3
 from mass.exception import TaskError, TaskWait
 from mass.scheduler.worker import BaseWorker
 from mass.scheduler.swf import config
-from mass.scheduler.swf.step import StepHandler
+from mass.scheduler.swf.step import StepHandler, ChildWorkflowExecution
 from mass.scheduler.swf.decider import Decider
 
 
@@ -77,18 +77,12 @@ class SWFDecider(Decider):
         elif self.handler.is_scheduled():
             return
         else:
-            self.decisions.start_child_workflow_execution(
-                workflow_id=self.handler.get_next_workflow_name(task['Task']['title']),
-                workflow_type_name=config.WORKFLOW_TYPE_FOR_TASK['name'],
-                workflow_type_version=config.WORKFLOW_TYPE_FOR_TASK['version'],
-                task_list=config.DECISION_TASK_LIST,
-                task_priority=str(self.handler.priority),
+            ChildWorkflowExecution.start(
+                decisions=self.decisions,
+                name=self.handler.get_next_workflow_name(task['Task']['title']),
+                input_data=task,
                 tag_list=self.handler.tag_list + [task['Task']['title']],
-                child_policy=config.WORKFLOW_CHILD_POLICY,
-                control=None,
-                execution_start_to_close_timeout=str(config.WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT),
-                task_start_to_close_timeout=str(config.DECISION_TASK_START_TO_CLOSE_TIMEOUT),
-                input=json.dumps(task))
+                priority=self.handler.priority)
 
     def execute_action(self, action):
         """Schedule action to SWF as activity task and wait. If action is not
