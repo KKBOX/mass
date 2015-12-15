@@ -11,7 +11,7 @@ from contextlib import contextmanager
 import json
 import uuid
 
-ActionError = namedtuple('ActionError', ['reason', 'details'])
+StepError = namedtuple('StepError', ['reason', 'details'])
 
 
 class Event(object):
@@ -41,9 +41,9 @@ class Event(object):
             raise AttributeError('Attribute is not found')
 
 
-class Action(object):
+class Step(object):
 
-    """Aggregate relative events as a action, include scheduled/initialed
+    """Aggregate relative events as a step, include scheduled/initialed
     event, completed event or failed event.
     """
 
@@ -52,7 +52,7 @@ class Action(object):
         self._events = events
         self._max_retry_count = max_retry_count
 
-    def action_id(self):
+    def id(self):
         return int(self.name().split('-')[-1])
 
     def created_time(self):
@@ -66,7 +66,7 @@ class Action(object):
         if not events:
             return None
         else:
-            return ActionError(events[0].reason, events[0].details)
+            return StepError(events[0].reason, events[0].details)
 
     def init_event(self):
         raise NotImplementedError
@@ -94,7 +94,7 @@ class Action(object):
         raise NotImplementedError
 
     def retry_name(self):
-        retry_id = self.action_id() + self.retry_count() + 1
+        retry_id = self.id() + self.retry_count() + 1
         return '-'.join(self.name().split('-')[:-1] + [str(retry_id)])
 
     def should_retry(self):
@@ -110,7 +110,7 @@ class Action(object):
         return self.__class__.__name__
 
 
-class ActivityTask(Action):
+class ActivityTask(Step):
 
     def init_event(self):
         events = [e for e in self._events if e.event_type.endswith('Scheduled')]
@@ -127,7 +127,7 @@ class ActivityTask(Action):
         return retry_count
 
 
-class ChildWorkflowExecution(Action):
+class ChildWorkflowExecution(Step):
 
     def init_event(self):
         events = [e for e in self._events if e.event_type.endswith('Initiated')]
@@ -147,9 +147,9 @@ class ChildWorkflowExecution(Action):
         return self.init_event().tag_list
 
 
-class ActionHandler(object):
+class StepHandler(object):
 
-    """Classify events of SWF execution history to actions.
+    """Classify events of SWF execution history to steps.
     """
 
     def __init__(self, events, activity_max_retry=0, workflow_max_retry=0):
@@ -220,15 +220,15 @@ class ActionHandler(object):
         return len(pending_events) > 0
 
     def classify_events(self, swf_events, activity_max_retry, workflow_max_retry):
-        """Classify events to groups by event type and id.
+        """Classify events to steps by event type and id.
         """
         events = map(Event, swf_events)
         events = [e for e in events if not e.event_type.startswith('Decision')]
         events = [e for e in events if not e.event_type.startswith('Workflow')]
 
-        actions = defaultdict(list)
+        steps = defaultdict(list)
         for event in events:
-            action_name = None
+            step_name = None
             if 'ActivityTask' in event.event_type:
                 if event.event_type.endswith('Scheduled'):
                     activity_id = int(event.activity_id.split('-')[-1])
@@ -237,12 +237,12 @@ class ActionHandler(object):
                     init_event = [e for e in events if e.event_id == init_event_id][0]
                     activity_id = int(init_event.activity_id.split('-')[-1])
                 activity_id = activity_id - (activity_id % (activity_max_retry + 1))
-                action_name = 'activity-%d' % activity_id
+                step_name = 'activity-%d' % activity_id
             elif 'ChildWorkflowExecution' in event.event_type:
                 workflow_id = int(event.workflow_id.split('-')[-1])
                 workflow_id = workflow_id - (workflow_id % (workflow_max_retry + 1))
-                action_name = 'workflow-%d' % workflow_id
+                step_name = 'workflow-%d' % workflow_id
 
-            if action_name:
-                actions[action_name].append(event)
-        return actions
+            if step_name:
+                steps[step_name].append(event)
+        return steps

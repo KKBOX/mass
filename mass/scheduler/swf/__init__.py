@@ -20,7 +20,7 @@ import boto3
 from mass.exception import TaskError, TaskWait
 from mass.scheduler.worker import BaseWorker
 from mass.scheduler.swf import config
-from mass.scheduler.swf.action import ActionHandler
+from mass.scheduler.swf.step import StepHandler
 from mass.scheduler.swf.decider import Decider
 
 
@@ -32,7 +32,7 @@ class SWFDecider(Decider):
         events = self.poll(task_list)
         if not events:
             return
-        self.handler = ActionHandler(
+        self.handler = StepHandler(
             events,
             activity_max_retry=config.ACTIVITY_MAX_RETRY,
             workflow_max_retry=config.WORKFLOW_MAX_RETRY)
@@ -132,56 +132,55 @@ class SWFDecider(Decider):
             super().fail(reason, details)
 
     def wait(self):
-        """Check if the next Task/Action could be processed. If the previous
-        Task/Action is submitted to SWF, processed and successful, return
-        result.
+        """Check if the next step could be processed. If the previous step
+        is submitted to SWF, processed and successful, return result.
         """
         if self.decisions._data:
             raise TaskWait
 
-        with self.handler.pop() as action:
-            if not action:
+        with self.handler.pop() as step:
+            if not step:
                 return
-            elif action.status() == 'Failed':
-                if action.should_retry():
-                    self.retry(action)
+            elif step.status() == 'Failed':
+                if step.should_retry():
+                    self.retry(step)
                     raise TaskWait
                 else:
-                    error = action.error()
-                    action.is_checked = True
+                    error = step.error()
+                    step.is_checked = True
                     raise TaskError(error.reason, error.details)
-            elif action.status() == 'TimedOut':
+            elif step.status() == 'TimedOut':
                 raise TaskError('TimedOut')
             else:
-                return action.result()
+                return step.result()
 
-    def retry(self, action):
-        if action.type() == 'ActivityTask':
+    def retry(self, step):
+        if step.type() == 'ActivityTask':
             self.decisions.schedule_activity_task(
-                activity_id=action.retry_name(),
+                activity_id=step.retry_name(),
                 activity_type_name=config.ACTIVITY_TYPE_FOR_CMD['name'],
                 activity_type_version=config.ACTIVITY_TYPE_FOR_CMD['version'],
-                task_list=action.task_list(),
-                task_priority=str(action.priority()),
+                task_list=step.task_list(),
+                task_priority=str(step.priority()),
                 control=None,
                 heartbeat_timeout=str(60),
                 schedule_to_close_timeout=str(config.ACTIVITY_TASK_START_TO_CLOSE_TIMEOUT),
                 schedule_to_start_timeout=str(config.ACTIVITY_TASK_START_TO_CLOSE_TIMEOUT),
                 start_to_close_timeout=str(config.ACTIVITY_TASK_START_TO_CLOSE_TIMEOUT),
-                input=json.dumps(action.input()))
-        elif action.type() == 'ChildWorkflowExecution':
+                input=json.dumps(step.input()))
+        elif step.type() == 'ChildWorkflowExecution':
             self.decisions.start_child_workflow_execution(
-                workflow_id=action.retry_name(),
+                workflow_id=step.retry_name(),
                 workflow_type_name=config.WORKFLOW_TYPE_FOR_TASK['name'],
                 workflow_type_version=config.WORKFLOW_TYPE_FOR_TASK['version'],
                 task_list=config.DECISION_TASK_LIST,
-                task_priority=str(action.priority()),
-                tag_list=action.tag_list(),
+                task_priority=str(step.priority()),
+                tag_list=step.tag_list(),
                 child_policy=config.WORKFLOW_CHILD_POLICY,
                 control=None,
                 execution_start_to_close_timeout=str(config.WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT),
                 task_start_to_close_timeout=str(config.DECISION_TASK_START_TO_CLOSE_TIMEOUT),
-                input=json.dumps(action.input()))
+                input=json.dumps(step.input()))
 
 
 class SWFWorker(BaseWorker):
