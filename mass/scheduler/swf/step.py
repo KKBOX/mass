@@ -55,9 +55,6 @@ class Step(object):
         self._events = events
         self._max_retry_count = max_retry_count
 
-    def id(self):
-        return int(self.name().split('-')[-1])
-
     def created_time(self):
         init_event = self.init_event()
         if not init_event:
@@ -100,7 +97,8 @@ class Step(object):
         raise NotImplementedError
 
     def retry_name(self):
-        retry_id = self.id() + self.retry_count() + 1
+        current_id = int(self.name().split('-')[-1])
+        retry_id = current_id + self.retry_count() + 1
         return '-'.join(self.name().split('-')[:-1] + [str(retry_id)])
 
     def should_retry(self):
