@@ -129,6 +129,21 @@ class ActivityTask(Step):
             [1 for e in self._events if e.event_type.endswith('Scheduled')]) - 1
         return retry_count
 
+    @classmethod
+    def schedule(cls, decisions, name, input_data, task_list, priority):
+        decisions.schedule_activity_task(
+            activity_id=name,
+            activity_type_name=config.ACTIVITY_TYPE_FOR_CMD['name'],
+            activity_type_version=config.ACTIVITY_TYPE_FOR_CMD['version'],
+            task_list=task_list,
+            task_priority=str(priority),
+            control=None,
+            heartbeat_timeout=str(config.ACTIVITY_HEARTBEAT_TIMEOUT),
+            schedule_to_close_timeout=str(config.ACTIVITY_TASK_START_TO_CLOSE_TIMEOUT),
+            schedule_to_start_timeout=str(config.ACTIVITY_TASK_START_TO_CLOSE_TIMEOUT),
+            start_to_close_timeout=str(config.ACTIVITY_TASK_START_TO_CLOSE_TIMEOUT),
+            input=json.dumps(input_data))
+
 
 class ChildWorkflowExecution(Step):
 

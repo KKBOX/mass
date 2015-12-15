@@ -20,7 +20,7 @@ import boto3
 from mass.exception import TaskError, TaskWait
 from mass.scheduler.worker import BaseWorker
 from mass.scheduler.swf import config
-from mass.scheduler.swf.step import StepHandler, ChildWorkflowExecution
+from mass.scheduler.swf.step import StepHandler, ChildWorkflowExecution, ActivityTask
 from mass.scheduler.swf.decider import Decider
 
 
@@ -93,18 +93,13 @@ class SWFDecider(Decider):
         elif self.handler.is_scheduled():
             return
         else:
-            self.decisions.schedule_activity_task(
-                activity_id=self.handler.get_next_activity_name(),
-                activity_type_name=config.ACTIVITY_TYPE_FOR_CMD['name'],
-                activity_type_version=config.ACTIVITY_TYPE_FOR_CMD['version'],
+            ActivityTask.schedule(
+                self.decisions,
+                name=self.handler.get_next_activity_name(),
+                input_data=action,
                 task_list=action['Action'].get('_role', config.ACTIVITY_TASK_LIST),
-                task_priority=str(self.handler.priority),
-                control=None,
-                heartbeat_timeout=str(60),
-                schedule_to_close_timeout=str(config.ACTIVITY_TASK_START_TO_CLOSE_TIMEOUT),
-                schedule_to_start_timeout=str(config.ACTIVITY_TASK_START_TO_CLOSE_TIMEOUT),
-                start_to_close_timeout=str(config.ACTIVITY_TASK_START_TO_CLOSE_TIMEOUT),
-                input=json.dumps(action))
+                priority=self.handler.priority
+            )
 
     def fail(self, reason, details):
         try:
