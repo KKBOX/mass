@@ -132,7 +132,7 @@ class SWFDecider(Decider):
                 return
             elif step.status() == 'Failed':
                 if step.should_retry():
-                    self.retry(step)
+                    step.retry(self.decisions)
                     raise TaskWait
                 else:
                     error = step.error()
@@ -142,34 +142,6 @@ class SWFDecider(Decider):
                 raise TaskError('TimedOut')
             else:
                 return step.result()
-
-    def retry(self, step):
-        if step.type() == 'ActivityTask':
-            self.decisions.schedule_activity_task(
-                activity_id=step.retry_name(),
-                activity_type_name=config.ACTIVITY_TYPE_FOR_CMD['name'],
-                activity_type_version=config.ACTIVITY_TYPE_FOR_CMD['version'],
-                task_list=step.task_list(),
-                task_priority=str(step.priority()),
-                control=None,
-                heartbeat_timeout=str(60),
-                schedule_to_close_timeout=str(config.ACTIVITY_TASK_START_TO_CLOSE_TIMEOUT),
-                schedule_to_start_timeout=str(config.ACTIVITY_TASK_START_TO_CLOSE_TIMEOUT),
-                start_to_close_timeout=str(config.ACTIVITY_TASK_START_TO_CLOSE_TIMEOUT),
-                input=json.dumps(step.input()))
-        elif step.type() == 'ChildWorkflowExecution':
-            self.decisions.start_child_workflow_execution(
-                workflow_id=step.retry_name(),
-                workflow_type_name=config.WORKFLOW_TYPE_FOR_TASK['name'],
-                workflow_type_version=config.WORKFLOW_TYPE_FOR_TASK['version'],
-                task_list=config.DECISION_TASK_LIST,
-                task_priority=str(step.priority()),
-                tag_list=step.tag_list(),
-                child_policy=config.WORKFLOW_CHILD_POLICY,
-                control=None,
-                execution_start_to_close_timeout=str(config.WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT),
-                task_start_to_close_timeout=str(config.DECISION_TASK_START_TO_CLOSE_TIMEOUT),
-                input=json.dumps(step.input()))
 
 
 class SWFWorker(BaseWorker):

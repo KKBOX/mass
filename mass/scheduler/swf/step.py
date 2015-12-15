@@ -93,6 +93,9 @@ class Step(object):
             except AttributeError:
                 return json.loads('null')
 
+    def retry(self, decisions):
+        raise NotImplementedError
+
     def retry_count(self):
         raise NotImplementedError
 
@@ -123,6 +126,14 @@ class ActivityTask(Step):
 
     def name(self):
         return self.init_event().activity_id
+
+    def retry(self, decisions):
+        self.schedule(
+            decisions=decisions,
+            name=self.retry_name(),
+            input_data=self.input(),
+            task_list=self.task_list(),
+            priority=self.priority())
 
     def retry_count(self):
         retry_count = sum(
@@ -155,6 +166,14 @@ class ChildWorkflowExecution(Step):
 
     def name(self):
         return self.init_event().workflow_id
+
+    def retry(self, decisions):
+        self.start(
+            decisions=decisions,
+            name=self.retry_name(),
+            input_data=self.input(),
+            tag_list=self.tag_list(),
+            priority=self.priority())
 
     def retry_count(self):
         retry_count = sum(
