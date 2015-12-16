@@ -19,6 +19,7 @@ import boto3
 # local modules
 from mass.exception import TaskError, TaskWait
 from mass.scheduler.worker import BaseWorker
+from mass.input_handler import InputHandler
 from mass.scheduler.swf import config
 from mass.scheduler.swf.step import StepHandler, ChildWorkflowExecution, ActivityTask
 from mass.scheduler.swf.decider import Decider
@@ -77,10 +78,17 @@ class SWFDecider(Decider):
         elif self.handler.is_scheduled():
             return
         else:
+            handler = InputHandler(self.handler.protocol)
             ChildWorkflowExecution.start(
                 decisions=self.decisions,
                 name=self.handler.get_next_workflow_name(task['Task']['title']),
-                input_data=task,
+                input_data={
+                    'protocol': self.handler.protocol,
+                    'body': handler.save(
+                        data=task,
+                        job_title=self.handler.tag_list[0],
+                        task_title=task['Task']['title'])
+                },
                 tag_list=self.handler.tag_list + [task['Task']['title']],
                 priority=self.handler.priority)
 
@@ -93,10 +101,17 @@ class SWFDecider(Decider):
         elif self.handler.is_scheduled():
             return
         else:
+            handler = InputHandler(self.handler.protocol)
             ActivityTask.schedule(
                 self.decisions,
                 name=self.handler.get_next_activity_name(),
-                input_data=action,
+                input_data={
+                    'protocol': self.handler.protocol,
+                    'body': handler.save(
+                        data=action,
+                        job_title=self.handler.tag_list[0],
+                        task_title='Action')
+                },
                 task_list=action['Action'].get('_role', config.ACTIVITY_TASK_LIST),
                 priority=self.handler.priority
             )
@@ -172,7 +187,9 @@ class SWFWorker(BaseWorker):
         if not task:
             return
 
-        action = json.loads(task['input'])
+        activity_input = json.loads(task['input'])
+        handler = InputHandler(activity_input['protocol'])
+        action = handler.load(activity_input['body'])
         try:
             result = self.execute(action)
         except TaskError as err:
