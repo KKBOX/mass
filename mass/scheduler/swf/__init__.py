@@ -18,11 +18,11 @@ import boto3
 
 # local modules
 from mass.exception import TaskError, TaskWait
-from mass.scheduler.worker import BaseWorker
 from mass.input_handler import InputHandler
 from mass.scheduler.swf import config
-from mass.scheduler.swf.step import StepHandler, ChildWorkflowExecution, ActivityTask
 from mass.scheduler.swf.decider import Decider
+from mass.scheduler.swf.step import StepHandler, ChildWorkflowExecution, ActivityTask
+from mass.scheduler.worker import BaseWorker
 
 
 class SWFDecider(Decider):
