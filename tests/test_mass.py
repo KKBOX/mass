@@ -16,10 +16,27 @@ import boto3
 import pytest
 
 # local modules
-from mass import Job, Task, Action
+from mass import Job, Task, Action, InputHandler
 from mass.scheduler.swf import config
 from mass.scheduler.swf import SWFWorker
 import mass
+
+
+input_handler = InputHandler()
+
+
+@input_handler.saver('local')
+def save_to_local(data, job_title, task_title):
+    file_path = '/tmp/Job_%s_Task_%s_%d.job' % (job_title, task_title, time.time())
+    with open(file_path, 'w') as f:
+        f.write(json.dumps(data))
+    return file_path
+
+
+@input_handler.loader('local')
+def load_from_local(file_path):
+    with open(file_path) as fp:
+        return json.load(fp)
 
 
 @pytest.fixture(scope='session')
@@ -49,7 +66,7 @@ def worker(request):
 def submit_job(monkeypatch):
 
     def submitter(job):
-        workflow_id, run_id = mass.submit(job)
+        workflow_id, run_id = mass.submit(job, 'local')
         monkeypatch.setenv('TEST_WORKFLOW_ID', workflow_id)
         monkeypatch.setenv('TEST_RUN_ID', run_id)
         return workflow_id, run_id
