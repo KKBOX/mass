@@ -12,6 +12,7 @@ import json
 import uuid
 
 # local modules
+from mass.input_handler import InputHandler
 from mass.scheduler.swf import config
 
 StepError = namedtuple('StepError', ['reason', 'details'])
@@ -218,6 +219,11 @@ class StepHandler(object):
         self.input = json.loads(start_event.input)
         self.tag_list = start_event.tag_list
         self.priority = int(start_event.task_priority)
+
+        input_ = json.loads(start_event.input)
+        self.protocol = input_['protocol']
+        handler = InputHandler(self.protocol)
+        self.input = handler.load(input_['body'])
 
         swf_event_groups = self.classify_events(
             events, self.activity_max_retry, self.workflow_max_retry)
