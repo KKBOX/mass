@@ -266,27 +266,43 @@ mass.submit(a_job)
 }
 ```
 
-## Alfred Job Script
+## Alfred Job Script (Alfscript)
+
+Alfred job script is adopted from Pixar's Alfred (and then Tractor), a Renderfarm Management System.
+This format was designed for artists to submit their rendering jobs into a render farm.
+The format is actually a TCL script. Yes. It is actually a program, but it can also be treat as a data.
+
+In this alfscript format, the terminologies are a little different.
+Ths workflow is composed as Job-Task-Cmd. The last (leaf) node is called Cmd instead of Action.
+It is because alfscript is designed to run commandline scripts only.
+
+If you are curious, you can refer to https://renderman.pixar.com/resources/current/tractor/scripting.html.
 
 ```tcl
-Job -title {} -subtasks {
-    Task {Preparing a source video} -cmds {
-        Cmd {youtube-dl https://www.youtube.com/watch?v=BI23U7U2aUY -o storytelling.mp4}
+Job 
+    -title {Convert a Youtube video into some videos and audios}
+    -serialsubtasks 1
+    -subtasks {
+        Task {Preparing a source video}
+            -cmds {
+                Cmd {youtube-dl https://www.youtube.com/watch?v=BI23U7U2aUY -o storytelling.mp4}
+            }
+        Task {Transcoding} 
+            -subtasks {
+                Task {Transcoding to profile #0} 
+                    -cmds {
+                        Cmd {ffmpeg -loglevel fatal -y -i storytelling.mp4 -c:v libx264 -b:v 128k -c:a copy -f mp4 output_0.mp4}
+                    }
+                Task {Transcoding to profile #1} 
+                    -cmds {
+                        Cmd {ffmpeg -loglevel fatal -y -i storytelling.mp4 -c:v libx264 -b:v 250k -c:a copy -f mp4 output_0.mp4}
+                    }
+                Task {Transcoding to profile #2, audio only} 
+                    -cmds {
+                        Cmd {ffmpeg -loglevel fatal -y -i storytelling.mp4 -vn -c:a libfdk_aac -b:a 96k output_2.mp4}
+                    }
+            }
     }
-    Task {Transcoding} -subtasks {
-        Task {Transcoding to profile #0} -cmds {
-            Cmd {ffmpeg -loglevel fatal -y -i storytelling.mp4 -c:v libx264 -b:v 128k -c:a copy -pass 1 -f mp4 /dev/null}
-            Cmd {ffmpeg -loglevel fatal -y -i storytelling.mp4 -c:v libx264 -b:v 128k -c:a copy -pass 2 -f mp4 output_0.mp4}
-        }
-        Task {Transcoding to profile #1} -cmds {
-            Cmd {ffmpeg -loglevel fatal -y -i storytelling.mp4 -c:v libx264 -b:v 250k -c:a copy -pass 1 -f mp4 /dev/null}
-            Cmd {ffmpeg -loglevel fatal -y -i storytelling.mp4 -c:v libx264 -b:v 250k -c:a copy -pass 2 -f mp4 output_0.mp4}
-        }
-        Task {Transcoding to profile #2, audio only} -cmds {
-            Cmd {ffmpeg -loglevel fatal -y -i storytelling.mp4 -vn -c:a libfdk_aac -b:a 96k output_2.mp4}
-        }
-    }
-} -serialsubtasks 1
 ```
 
 
