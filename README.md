@@ -177,11 +177,9 @@ with Job(title="", serialsubtasks=True) as a_job:
         Action("youtube-dl https://www.youtube.com/watch?v=BI23U7U2aUY -o storytelling.mp4")
     with Task("Transcoding"):
         with Task("Transcoding to profile #0"):
-            Action("ffmpeg -loglevel fatal -y -i storytelling.mp4 -c:v libx264 -b:v 128k -c:a copy -pass 1 -f mp4 /dev/null")
-            Action("ffmpeg -loglevel fatal -y -i storytelling.mp4 -c:v libx264 -b:v 128k -c:a copy -pass 2 -f mp4 output_0.mp4")
+            Action("ffmpeg -loglevel fatal -y -i storytelling.mp4 -c:v libx264 -b:v 128k -c:a copy -f mp4 output_0.mp4")
         with Task("Transcoding to profile #1"):
-            Action("ffmpeg -loglevel fatal -y -i storytelling.mp4 -c:v libx264 -b:v 250k -c:a copy -pass 1 -f mp4 /dev/null")
-            Action("ffmpeg -loglevel fatal -y -i storytelling.mp4 -c:v libx264 -b:v 250k -c:a copy -pass 2 -f mp4 output_1.mp4")
+            Action("ffmpeg -loglevel fatal -y -i storytelling.mp4 -c:v libx264 -b:v 250k -c:a copy -f mp4 /dev/null")
         with Task("Transcoding to profile #2, audio only"):
             Action("ffmpeg -loglevel fatal -y -i storytelling.mp4 -vn -c:a libfdk_aac -b:a 96k output_2.mp4")
 
@@ -218,12 +216,7 @@ mass.submit(a_job)
                 "children": [
                   {
                     "Action": {
-                      "input": "ffmpeg -loglevel fatal -y -i storytelling.mp4 -c:v libx264 -b:v 128k -c:a copy -pass 1 -f mp4 /dev/null"
-                    }
-                  },
-                  {
-                    "Action": {
-                      "input": "ffmpeg -loglevel fatal -y -i storytelling.mp4 -c:v libx264 -b:v 128k -c:a copy -pass 2 -f mp4 output_0.mp4"
+                      "input": "ffmpeg -loglevel fatal -y -i storytelling.mp4 -c:v libx264 -b:v 128k -c:a copy -f mp4 /dev/null"
                     }
                   }
                 ]
@@ -235,12 +228,7 @@ mass.submit(a_job)
                 "children": [
                   {
                     "Action": {
-                      "input": "ffmpeg -loglevel fatal -y -i storytelling.mp4 -c:v libx264 -b:v 250k -c:a copy -pass 1 -f mp4 /dev/null"
-                    }
-                  },
-                  {
-                    "Action": {
-                      "input": "ffmpeg -loglevel fatal -y -i storytelling.mp4 -c:v libx264 -b:v 250k -c:a copy -pass 2 -f mp4 output_1.mp4"
+                      "input": "ffmpeg -loglevel fatal -y -i storytelling.mp4 -c:v libx264 -b:v 250k -c:a copy -f mp4 /dev/null"
                     }
                   }
                 ]
