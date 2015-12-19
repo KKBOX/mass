@@ -266,7 +266,17 @@ mass.submit(a_job)
 }
 ```
 
-## Alfred Job Script
+## Alfred Job Script (Alfscript)
+
+Alfred job script is adopted from Pixar's Alfred (and then Tractor), a Renderfarm Management System.
+This format was designed for artists to submit their rendering jobs into a render farm.
+The format is actually a TCL script. Yes. It is actually a program, but it can also be treat as a data.
+
+In this alfscript format, the terminologies are a little different.
+Ths workflow is composed as Job-Task-Cmd. The last (leaf) node is called Cmd instead of Action.
+It is because alfscript is designed to run commandline scripts only.
+
+If you are curious, you can refer to https://renderman.pixar.com/resources/current/tractor/scripting.html.
 
 ```tcl
 Job 
