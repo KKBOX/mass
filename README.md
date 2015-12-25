@@ -10,6 +10,7 @@ video encoding, rendering for computer graphics, DB dump, or complex algorithm o
 The above is copied from [Luigi](https://github.com/spotify/luigi) by Spotify
 because of the nature of laziness.
 
+[![Build Status](https://travis-ci.org/drakeguan/mass.svg?branch=develop)](https://travis-ci.org/drakeguan/mass)
 
 
 # Why another pipeline tool/framework?
