@@ -12,7 +12,7 @@ import boto3
 from botocore.exceptions import ClientError
 
 # local modules
-from mass.workers.swf import config
+from mass.scheduler.swf import config
 
 
 def register_domain():
