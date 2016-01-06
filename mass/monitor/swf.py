@@ -10,7 +10,7 @@ import arrow
 import boto3
 
 # local modules
-from mass.workers.swf import config
+from mass.scheduler.swf import config
 
 
 def workflows_to_jobs(workflows):

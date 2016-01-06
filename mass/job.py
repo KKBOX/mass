@@ -97,6 +97,8 @@ class Action(Base):
             function.
     """
 
-    def __init__(self, *, _role=None, _whenerror=False, **kwargs):
+    def __init__(self, **kwargs):
+        _role = kwargs.pop('_role', None)
+        _whenerror = kwargs.pop('_whenerror', False)
         super().__init__(_role=_role, _whenerror=_whenerror, **kwargs)
         self['Action'].pop('children')
