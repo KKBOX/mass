@@ -10,7 +10,6 @@ import json
 # local modules
 from mass.exception import UnsupportedScheduler
 from mass.input_handler import InputHandler
-from mass.scheduler.swf import config
 
 
 def submit(job, protocol=None, priority=1, scheduler='swf'):
@@ -18,6 +17,7 @@ def submit(job, protocol=None, priority=1, scheduler='swf'):
     """
     if scheduler != 'swf':
         raise UnsupportedScheduler(scheduler)
+    from mass.scheduler.swf import config
     import boto3
     client = boto3.client('swf', region_name=config.REGION)
     handler = InputHandler(protocol)
