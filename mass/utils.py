@@ -7,9 +7,6 @@
 # built-in modules
 import json
 
-# 3rd-party modules
-import boto3
-
 # local modules
 from mass.input_handler import InputHandler
 from mass.scheduler.swf import config
@@ -18,6 +15,7 @@ from mass.scheduler.swf import config
 def submit(job, protocol=None, priority=1):
     """Submit mass job to SWF with specific priority.
     """
+    import boto3
     client = boto3.client('swf', region_name=config.REGION)
     handler = InputHandler(protocol)
 
