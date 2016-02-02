@@ -7,6 +7,12 @@ REGION = 'ap-northeast-1'
 # The name of the domain in which the workflow execution is created
 DOMAIN = 'mass'
 
+# The time in seconds till a timeout exception is thrown when attempting to make a connection.
+CONNECT_TIMEOUT = 50
+
+# The time in seconds till a timeout exception is thrown when attempting to read from a connection.
+READ_TIMEOUT = 70
+
 # The SWF workflow type for Job.
 WORKFLOW_TYPE_FOR_JOB = {'name': 'Job', 'version': '0.1'}
 
