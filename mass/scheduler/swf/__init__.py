@@ -14,6 +14,7 @@ import time
 import traceback
 
 # 3rd-party modules
+from botocore.client import Config
 import boto3
 
 # local modules
@@ -165,7 +166,11 @@ class SWFWorker(BaseWorker):
         super().__init__()
         self.domain = domain or config.DOMAIN
         self.region = region or config.REGION
-        self.client = boto3.client('swf', region_name=self.region)
+        self.client = boto3.client(
+            'swf',
+            region_name=self.region,
+            config=Config(connect_timeout=config.CONNECT_TIMEOUT,
+                          read_timeout=config.READ_TIMEOUT))
         self.decider = SWFDecider(self.domain, self.region)
 
     def poll(self, task_list):
