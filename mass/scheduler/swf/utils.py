@@ -8,15 +8,20 @@
 import math
 
 # 3rd-party modules
-import boto3
+from botocore.client import Config
 from botocore.exceptions import ClientError
+import boto3
 
 # local modules
 from mass.scheduler.swf import config
 
 
 def register_domain():
-    client = boto3.client('swf', region_name=config.REGION)
+    client = boto3.client(
+        'swf',
+        region_name=self.region,
+        config=Config(connect_timeout=config.CONNECT_TIMEOUT,
+                      read_timeout=config.READ_TIMEOUT))
 
     # register domain for Mass
     try:
@@ -32,7 +37,11 @@ def register_domain():
 
 
 def register_workflow_type():
-    client = boto3.client('swf', region_name=config.REGION)
+    client = boto3.client(
+        'swf',
+        region_name=self.region,
+        config=Config(connect_timeout=config.CONNECT_TIMEOUT,
+                      read_timeout=config.READ_TIMEOUT))
 
     # register workflow type for Job
     try:
@@ -70,7 +79,11 @@ def register_workflow_type():
 
 
 def register_activity_type():
-    client = boto3.client('swf', region_name=config.REGION)
+    client = boto3.client(
+        'swf',
+        region_name=self.region,
+        config=Config(connect_timeout=config.CONNECT_TIMEOUT,
+                      read_timeout=config.READ_TIMEOUT))
 
     # register activity type for Cmd
     try:

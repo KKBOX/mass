@@ -9,9 +9,11 @@ results to SWF.
 import socket
 
 # 3rd-party modules
+from botocore.client import Config
 import boto3
 
 # local modules
+from mass.scheduler.swf import config
 from mass.scheduler.swf.decisions import Decisions
 
 
@@ -20,7 +22,11 @@ class Decider:
     def __init__(self, domain, region):
         self.domain = domain
         self.region = region
-        self.client = boto3.client('swf', region_name=self.region)
+        self.client = boto3.client(
+            'swf',
+            region_name=self.region,
+            config=Config(connect_timeout=config.CONNECT_TIMEOUT,
+                          read_timeout=config.READ_TIMEOUT))
 
     def poll(self, task_list):
         """Poll workflow execution history from SWF.

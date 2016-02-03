@@ -7,6 +7,9 @@
 # built-in modules
 import json
 
+# 3rd-party modules
+from botocore.client import Config
+
 # local modules
 from mass.exception import UnsupportedScheduler
 from mass.input_handler import InputHandler
@@ -19,7 +22,11 @@ def submit(job, protocol=None, priority=1, scheduler='swf'):
         raise UnsupportedScheduler(scheduler)
     from mass.scheduler.swf import config
     import boto3
-    client = boto3.client('swf', region_name=config.REGION)
+    client = boto3.client(
+        'swf',
+        region_name=self.region,
+        config=Config(connect_timeout=config.CONNECT_TIMEOUT,
+                      read_timeout=config.READ_TIMEOUT))
     handler = InputHandler(protocol)
 
     res = client.start_workflow_execution(
