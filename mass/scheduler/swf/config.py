@@ -13,6 +13,18 @@ CONNECT_TIMEOUT = 50
 # The time in seconds till a timeout exception is thrown when attempting to read from a connection.
 READ_TIMEOUT = 70
 
+# The maximum length of the input field that is sent to SWF.
+MAX_INPUT_SIZE = 32000
+
+# The maximum length of the result field that is sent to SWF.
+MAX_RESULT_SIZE = 32000
+
+# The maximum length of the reason field that is sent to SWF.
+MAX_REASON_SIZE = 256
+
+# The maximum length of the detail field that is sent to SWF.
+MAX_DETAIL_SIZE = 32000
+
 # The SWF workflow type for Job.
 WORKFLOW_TYPE_FOR_JOB = {'name': 'Job', 'version': '0.1'}
 
