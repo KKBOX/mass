@@ -200,18 +200,18 @@ class SWFWorker(BaseWorker):
         except TaskError as err:
             self.client.respond_activity_task_failed(
                 taskToken=task['taskToken'],
-                details=err.details,
-                reason=err.reason)
+                details=err.details[:config.MAX_DETAIL_SIZE],
+                reason=err.reason[:config.MAX_REASON_SIZE])
         except:
             _, error, _ = sys.exc_info()
             self.client.respond_activity_task_failed(
                 taskToken=task['taskToken'],
-                details=json.dumps(traceback.format_exc()),
-                reason=repr(error))
+                details=json.dumps(traceback.format_exc())[:config.MAX_DETAIL_SIZE],
+                reason=repr(error)[:config.MAX_REASON_SIZE])
         else:
             self.client.respond_activity_task_completed(
                 taskToken=task['taskToken'],
-                result=json.dumps(result))
+                result=json.dumps(result)[:config.MAX_RESULT_SIZE])
 
     def start(self, farm=None):
         """Start workers for each role.

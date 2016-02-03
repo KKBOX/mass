@@ -40,6 +40,8 @@ class Decider:
                     'name': task_list
                 },
                 identity=socket.gethostname()):
+            if 'events' not in res:
+                break
             events += res['events']
             self.task_token = res['taskToken']
         return events
