@@ -129,12 +129,12 @@ class SWFDecider(Decider):
             self.suspend()
         except TaskError:
             _, error, _ = sys.exc_info()
-            super().fail(error.reason, error.details)
+            super(SWFDecider, self).fail(error.reason, error.details)
         except:
             _, error, _ = sys.exc_info()
-            super().fail(repr(error), json.dumps(traceback.format_exc()))
+            super(SWFDecider, self).fail(repr(error), json.dumps(traceback.format_exc()))
         else:
-            super().fail(reason, details)
+            super(SWFDecider, self).fail(reason, details)
 
     def wait(self):
         """Check if the next step could be processed. If the previous step
@@ -163,7 +163,7 @@ class SWFDecider(Decider):
 class SWFWorker(BaseWorker):
 
     def __init__(self, domain=None, region=None):
-        super().__init__()
+        super(SWFWorker, self).__init__()
         self.domain = domain or config.DOMAIN
         self.region = region or config.REGION
         self.client = boto3.client(

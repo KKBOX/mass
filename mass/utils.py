@@ -24,7 +24,7 @@ def submit(job, protocol=None, priority=1, scheduler='swf'):
     import boto3
     client = boto3.client(
         'swf',
-        region_name=self.region,
+        region_name=config.REGION,
         config=Config(connect_timeout=config.CONNECT_TIMEOUT,
                       read_timeout=config.READ_TIMEOUT))
     handler = InputHandler(protocol)
