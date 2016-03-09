@@ -4,6 +4,7 @@
 from mass.input_handler import InputHandler
 from mass.job import Job, Task, Action
 from mass.utils import submit
+from pkg_resources import get_distribution
 
-__version__ = (0, 1, 0, 'final', 0)
+__version__ = get_distribution('mass').version
 __all__ = [submit, Job, Task, Action, InputHandler]

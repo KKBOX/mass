@@ -11,7 +11,7 @@ with open(os.path.join(os.path.dirname(__file__), 'requirements.txt')) as f:
 
 setup(
     name='mass',
-    version=':versiontools:mass:',
+    version='0.1.0',
     description='Computer Farm Management',
     author='',
     author_email='',
