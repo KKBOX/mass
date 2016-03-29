@@ -143,8 +143,8 @@ class ActivityTask(Step):
     def schedule(cls, decisions, name, input_data, task_list, priority):
         decisions.schedule_activity_task(
             activity_id=name,
-            activity_type_name=config.ACTIVITY_TYPE_FOR_CMD['name'],
-            activity_type_version=config.ACTIVITY_TYPE_FOR_CMD['version'],
+            activity_type_name=config.ACTIVITY_TYPE_FOR_ACTION['name'],
+            activity_type_version=config.ACTIVITY_TYPE_FOR_ACTION['version'],
             task_list=task_list,
             task_priority=str(priority),
             control=None,
