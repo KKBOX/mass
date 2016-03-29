@@ -3,7 +3,7 @@ from functools import wraps
 import inspect
 
 
-class InputHandler:
+class InputHandler(object):
 
     HANDLERS = {}
 

@@ -13,7 +13,7 @@ import traceback
 from mass.exception import TaskError
 
 
-class BaseWorker:
+class BaseWorker(object):
     """Base class of mass worker.
     """
 

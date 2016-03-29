@@ -17,7 +17,7 @@ from mass.scheduler.swf import config
 from mass.scheduler.swf.decisions import Decisions
 
 
-class Decider:
+class Decider(object):
 
     def __init__(self, domain, region):
         self.domain = domain

@@ -6,7 +6,7 @@ Copied from boto.swf.layer1_decisions.
 """
 
 
-class Decisions:
+class Decisions(object):
 
     def __init__(self):
         self._data = []
