@@ -89,8 +89,8 @@ def register_activity_type():
     try:
         res = client.register_activity_type(
             domain=config.DOMAIN,
-            name=config.ACTIVITY_TYPE_FOR_CMD['name'],
-            version=config.ACTIVITY_TYPE_FOR_CMD['version'],
+            name=config.ACTIVITY_TYPE_FOR_ACTION['name'],
+            version=config.ACTIVITY_TYPE_FOR_ACTION['version'],
             description='The SWF activity type for Cmd of Mass.',
             defaultTaskStartToCloseTimeout=str(config.ACTIVITY_TASK_START_TO_CLOSE_TIMEOUT),
             defaultTaskHeartbeatTimeout=str(config.ACTIVITY_HEARTBEAT_TIMEOUT),

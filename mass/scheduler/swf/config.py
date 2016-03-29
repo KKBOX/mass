@@ -31,8 +31,8 @@ WORKFLOW_TYPE_FOR_JOB = {'name': 'Job', 'version': '0.1'}
 # The SWF workflow type for Task.
 WORKFLOW_TYPE_FOR_TASK = {'name': 'Task', 'version': '0.1'}
 
-# The SWF activity type for Cmd.
-ACTIVITY_TYPE_FOR_CMD = {'name': 'Action', 'version': '0.1'}
+# The SWF activity type for Action.
+ACTIVITY_TYPE_FOR_ACTION = {'name': 'Action', 'version': '0.1'}
 
 # The default task list to use for the decision tasks.
 DECISION_TASK_LIST = 'mass'
