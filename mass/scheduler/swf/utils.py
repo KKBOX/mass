@@ -19,7 +19,7 @@ from mass.scheduler.swf import config
 def register_domain():
     client = boto3.client(
         'swf',
-        region_name=self.region,
+        region_name=config.REGION,
         config=Config(connect_timeout=config.CONNECT_TIMEOUT,
                       read_timeout=config.READ_TIMEOUT))
 
@@ -39,7 +39,7 @@ def register_domain():
 def register_workflow_type():
     client = boto3.client(
         'swf',
-        region_name=self.region,
+        region_name=config.REGION,
         config=Config(connect_timeout=config.CONNECT_TIMEOUT,
                       read_timeout=config.READ_TIMEOUT))
 
@@ -81,7 +81,7 @@ def register_workflow_type():
 def register_activity_type():
     client = boto3.client(
         'swf',
-        region_name=self.region,
+        region_name=config.REGION,
         config=Config(connect_timeout=config.CONNECT_TIMEOUT,
                       read_timeout=config.READ_TIMEOUT))
 
