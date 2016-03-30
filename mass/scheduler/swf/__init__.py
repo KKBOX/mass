@@ -5,6 +5,8 @@
 """
 
 # built-in modules
+from __future__ import print_function
+from functools import wraps
 from multiprocessing import Process
 import json
 import signal
@@ -209,6 +211,18 @@ class SWFWorker(BaseWorker):
                           read_timeout=config.READ_TIMEOUT))
         self.decider = SWFDecider(self.domain, self.region)
 
+    def try_except(self, exception=Exception, handler=print):
+
+        def decorator(func):
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                try:
+                    func(*args, **kwargs)
+                except exception as e:
+                    handler(e)
+            return wrapper
+        return decorator
+
     def poll(self, task_list):
         """Poll activity task of specific task list from SWF.
         """
@@ -221,6 +235,7 @@ class SWFWorker(BaseWorker):
             return None
         return task
 
+    @try_except(Exception)
     def run(self, task_list):
         """Poll activity task from SWF and process.
         """
