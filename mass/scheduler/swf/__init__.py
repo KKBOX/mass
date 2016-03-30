@@ -153,9 +153,13 @@ class SWFDecider(Decider):
         try:
             type_ = 'Job' if 'Job' in self.handler.input else 'Task'
             actions = filter(lambda c: 'Action' in c, self.handler.input[type_]['children'])
-            error_handlers = filter(lambda a: a['Action']['_whenerror'], actions)
-            for action in error_handlers:
-                self.execute_action(action)
+            for i, child in enumerate(self.handler.input[type_]['children']):
+                if 'Action' not in child:
+                    continue
+                if child['Action']['_whenerror'] is False:
+                    continue
+                priority = get_priority(self.handler.input, self.handler.priority, i)
+                self.execute_action(child, priority)
                 self.wait()
         except TaskWait:
             self.suspend()
