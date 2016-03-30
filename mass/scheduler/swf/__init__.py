@@ -167,12 +167,18 @@ class SWFDecider(Decider):
             self.suspend()
         except TaskError:
             _, error, _ = sys.exc_info()
-            super(SWFDecider, self).fail(error.reason, error.details)
+            super(SWFDecider, self).fail(
+                error.reason[:config.MAX_REASON_SIZE] if error.reason else error.reason,
+                error.details[:config.MAX_DETAIL_SIZE] if error.details else error.details)
         except:
             _, error, _ = sys.exc_info()
-            super(SWFDecider, self).fail(repr(error), json.dumps(traceback.format_exc()))
+            super(SWFDecider, self).fail(
+                repr(error)[:config.MAX_REASON_SIZE],
+                traceback.format_exc()[:config.MAX_DETAIL_SIZE])
         else:
-            super(SWFDecider, self).fail(reason, details)
+            super(SWFDecider, self).fail(
+                reason[:config.MAX_REASON_SIZE] if reason else reason,
+                details[:config.MAX_DETAIL_SIZE] if details else details)
 
     def wait(self):
         """Check if the next step could be processed. If the previous step
@@ -184,7 +190,7 @@ class SWFDecider(Decider):
         with self.handler.pop() as step:
             if not step:
                 return
-            elif step.status() == 'Failed':
+            if step.status() in ['Failed', 'TimedOut']:
                 if step.should_retry():
                     step.retry(self.decisions)
                     raise TaskWait
@@ -192,8 +198,6 @@ class SWFDecider(Decider):
                     error = step.error()
                     step.is_checked = True
                     raise TaskError(error.reason, error.details)
-            elif step.status() == 'TimedOut':
-                raise TaskError('TimedOut')
             else:
                 return step.result()
 
