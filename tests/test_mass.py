@@ -93,7 +93,7 @@ def submit_job(monkeypatch):
 def iter_workflow_execution_history(workflow_id, run_id, reverse_order=False, ignore_decision_task=True):
     client = boto3.client(
         'swf',
-        region_name=self.region,
+        region_name=config.REGION,
         config=Config(connect_timeout=config.CONNECT_TIMEOUT,
                       read_timeout=config.READ_TIMEOUT))
     paginator = client.get_paginator('get_workflow_execution_history')

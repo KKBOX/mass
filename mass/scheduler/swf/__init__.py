@@ -26,6 +26,37 @@ from mass.scheduler.swf.step import StepHandler, ChildWorkflowExecution, Activit
 from mass.scheduler.worker import BaseWorker
 
 
+def get_priority(root, root_priority, target_index):
+    def count_max_serial_children(task):
+        result = None
+        if 'Action' in task:
+            result = 0
+        elif task['Task'].get('parallel', False):
+            result = max(
+                [count_max_serial_children(c) + 1
+                 for c in task['Task']['children']])
+        else:
+            result = reduce(
+                lambda x, y: x + y,
+                [count_max_serial_children(c) + 1
+                 for c in task['Task']['children']])
+        return result
+    type_ = root.keys()[0]
+    is_parallel = root[type_].get('parallel', False)
+    priority = None
+    brothers = root[type_]['children'][:target_index]
+    if is_parallel:  # parallel subtask
+        priority = root_priority + 1
+    elif not brothers:
+        priority = root_priority + 1
+    else:
+        priority = reduce(
+            lambda x, y: x + y,
+            [count_max_serial_children(b) + 1
+             for b in brothers]) + root_priority + 1
+    return priority
+
+
 class SWFDecider(Decider):
 
     def run(self, task_list):
@@ -58,11 +89,12 @@ class SWFDecider(Decider):
         """
         type_ = 'Job' if 'Job' in self.handler.input else 'Task'
         parallel = self.handler.input[type_].get('parallel', False)
-        for child in self.handler.input[type_]['children']:
+        for i, child in enumerate(self.handler.input[type_]['children']):
+            priority = get_priority(self.handler.input, self.handler.priority, i)
             if 'Task' in child:
-                self.execute_task(child)
+                self.execute_task(child, priority)
             elif 'Action' in child and not child['Action']['_whenerror']:
-                self.execute_action(child)
+                self.execute_action(child, priority)
 
             if not parallel:
                 self.wait()
@@ -70,7 +102,7 @@ class SWFDecider(Decider):
             for child in self.handler.input[type_]['children']:
                 self.wait()
 
-    def execute_task(self, task):
+    def execute_task(self, task, priority):
         """Schedule task to SWF as child workflow and wait. If the task is not
         completed, raise TaskWait.
         """
@@ -91,9 +123,9 @@ class SWFDecider(Decider):
                         task_title=task['Task']['title'])
                 },
                 tag_list=self.handler.tag_list + [task['Task']['title']],
-                priority=self.handler.priority)
+                priority=priority)
 
-    def execute_action(self, action):
+    def execute_action(self, action, priority):
         """Schedule action to SWF as activity task and wait. If action is not
         completed, raise TaskWait.
         """
@@ -114,7 +146,7 @@ class SWFDecider(Decider):
                         task_title='Action')
                 },
                 task_list=action['Action'].get('_role', config.ACTIVITY_TASK_LIST),
-                priority=self.handler.priority
+                priority=priority
             )
 
     def fail(self, reason, details):
