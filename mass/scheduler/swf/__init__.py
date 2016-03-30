@@ -32,7 +32,9 @@ def get_priority(root, root_priority, target_index):
         if 'Action' in task:
             result = 0
         elif task['Task'].get('parallel', False):
-            result = 1
+            result = max(
+                [count_max_serial_children(c) + 1
+                 for c in task['Task']['children']])
         else:
             result = reduce(
                 lambda x, y: x + y,
