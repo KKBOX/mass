@@ -56,6 +56,12 @@ ACTIVITY_TASK_START_TO_CLOSE_TIMEOUT = 7 * 24 * 60 * 60
 # The heartbeat timeout for activity task in second.
 ACTIVITY_HEARTBEAT_TIMEOUT = 60 * 60
 
+# The interval of activity heartbeat.
+ACTIVITY_HEARTBEAT_INTERVAL = 15 * 60  # for 900 workers
+
+# The max retry count of activity heartbeat.
+ACTIVITY_HEARTBEAT_MAX_RETRY = 2
+
 # The max retry count of activity task.
 ACTIVITY_MAX_RETRY = 2
 

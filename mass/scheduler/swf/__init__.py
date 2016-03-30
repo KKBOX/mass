@@ -7,7 +7,7 @@
 # built-in modules
 from __future__ import print_function
 from functools import wraps
-from multiprocessing import Process
+from multiprocessing import Event, Process, Queue
 import json
 import signal
 import socket
@@ -198,6 +198,33 @@ class SWFDecider(Decider):
                 return step.result()
 
 
+def execute_action_proc(execute, action, event, queue):
+    try:
+        start_time = time.time()
+        result = execute(action)
+        execution_time = time.time() - start_time
+        queue.put({
+            'status': 'completed',
+            'result': result,
+            'execution_time': execution_time
+        })
+    except TaskError as err:
+        queue.put({
+            'status': 'failed',
+            'reason': err.reason,
+            'details': err.details
+        })
+    except Exception as e:
+        _, exc_value, _ = sys.exc_info()
+        queue.put({
+            'status': 'failed',
+            'reason': repr(e),
+            'details': traceback.format_exc()
+        })
+    finally:
+        event.set()
+
+
 class SWFWorker(BaseWorker):
 
     def __init__(self, domain=None, region=None):
@@ -235,6 +262,44 @@ class SWFWorker(BaseWorker):
             return None
         return task
 
+    def heartbeat(self, task_token, details=''):
+        return self.client.record_activity_task_heartbeat(
+            taskToken=task_token,
+            details=details
+        )
+
+    def execute_action(self, action, task_token):
+        event = Event()
+        queue = Queue()
+        proc = Process(
+            target=execute_action_proc,
+            args=(self.execute, action, event, queue))
+        proc.start()
+
+        # Send heartbeat.
+        heartbeat_retry = 0
+        while not event.is_set():
+            event.wait(config.ACTIVITY_HEARTBEAT_INTERVAL)
+            try:
+                res = self.heartbeat(task_token)
+                if res['cancelRequested']:
+                    proc.terminate()
+                    proc.join()
+                    return Result('cancelled', -1, '', '', '', -1)
+            except Exception as err:
+                if heartbeat_retry <= config.ACTIVITY_HEARTBEAT_MAX_RETRY:
+                    heartbeat_retry += 1
+                    continue
+                else:
+                    proc.terminate()
+                    proc.join()
+                    raise
+
+        # Evaluate the result.
+        result = queue.get_nowait()
+        proc.join()
+        return result
+
     @try_except(Exception)
     def run(self, task_list):
         """Poll activity task from SWF and process.
@@ -246,23 +311,16 @@ class SWFWorker(BaseWorker):
         activity_input = json.loads(task['input'])
         handler = InputHandler(activity_input['protocol'])
         action = handler.load(activity_input['body'])
-        try:
-            result = self.execute(action)
-        except TaskError as err:
-            self.client.respond_activity_task_failed(
-                taskToken=task['taskToken'],
-                details=err.details[:config.MAX_DETAIL_SIZE],
-                reason=err.reason[:config.MAX_REASON_SIZE])
-        except:
-            _, error, _ = sys.exc_info()
-            self.client.respond_activity_task_failed(
-                taskToken=task['taskToken'],
-                details=json.dumps(traceback.format_exc())[:config.MAX_DETAIL_SIZE],
-                reason=repr(error)[:config.MAX_REASON_SIZE])
-        else:
+        result = self.execute_action(action, task['taskToken'])
+        if result['status'] == 'completed':
             self.client.respond_activity_task_completed(
                 taskToken=task['taskToken'],
-                result=json.dumps(result)[:config.MAX_RESULT_SIZE])
+                result=json.dumps(result['result'])[:config.MAX_RESULT_SIZE])
+        else:
+            self.client.respond_activity_task_failed(
+                taskToken=task['taskToken'],
+                details=result['details'][:config.MAX_DETAIL_SIZE],
+                reason=result['reason'][:config.MAX_REASON_SIZE])
 
     def start(self, farm=None):
         """Start workers for each role.
