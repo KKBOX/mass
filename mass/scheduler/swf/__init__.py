@@ -6,7 +6,7 @@
 
 # built-in modules
 from __future__ import print_function
-from functools import wraps
+from functools import reduce, wraps
 from multiprocessing import Event, Process, Queue
 import json
 import signal
