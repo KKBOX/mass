@@ -39,8 +39,7 @@ def submit(job, protocol=None, priority=1, scheduler='swf'):
             'protocol': protocol,
             'body': handler.save(
                 data=job,
-                job_title=job.title,
-                task_title=job.title
+                genealogy=[job.title]
             )
         }),
         executionStartToCloseTimeout=str(config.WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT),
