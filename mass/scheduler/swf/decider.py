@@ -13,6 +13,7 @@ from botocore.client import Config
 import boto3
 
 # local modules
+from mass.log_handler import LogHandler
 from mass.scheduler.swf import config
 from mass.scheduler.swf.decisions import Decisions
 
@@ -27,6 +28,7 @@ class Decider(object):
             region_name=self.region,
             config=Config(connect_timeout=config.CONNECT_TIMEOUT,
                           read_timeout=config.READ_TIMEOUT))
+        self.log_handler = LogHandler()
 
     def poll(self, task_list):
         """Poll workflow execution history from SWF.
@@ -66,3 +68,4 @@ class Decider(object):
         self.client.respond_decision_task_completed(
             taskToken=self.task_token,
             decisions=self.decisions._data)
+        self.log_handler.log('error', 'Reason: %s\nDetails: %s' % (reason, details))
