@@ -121,7 +121,7 @@ class SWFDecider(Decider):
                     'protocol': self.handler.protocol,
                     'body': handler.save(
                         data=task,
-                        genealogy=self.handler.tag_list)
+                        genealogy=self.handler.tag_list + [task['Task']['title']])
                 },
                 tag_list=self.handler.tag_list + [task['Task']['title']],
                 priority=priority)
