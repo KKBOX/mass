@@ -43,7 +43,7 @@ def get_priority(root, root_priority, target_index):
                 [count_max_serial_children(c) + 1
                  for c in task['Task']['children']])
         return result
-    type_ = root.keys()[0]
+    type_ = [k for k in root.keys()][0]
     is_parallel = root[type_].get('parallel', False)
     priority = None
     brothers = root[type_]['children'][:target_index]
