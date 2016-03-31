@@ -121,8 +121,7 @@ class SWFDecider(Decider):
                     'protocol': self.handler.protocol,
                     'body': handler.save(
                         data=task,
-                        job_title=self.handler.tag_list[0],
-                        task_title=task['Task']['title'])
+                        genealogy=self.handler.tag_list)
                 },
                 tag_list=self.handler.tag_list + [task['Task']['title']],
                 priority=priority)
@@ -137,15 +136,15 @@ class SWFDecider(Decider):
             return
         else:
             handler = InputHandler(self.handler.protocol)
+            action_name = self.handler.get_next_activity_name()
             ActivityTask.schedule(
                 self.decisions,
-                name=self.handler.get_next_activity_name(),
+                name=action_name,
                 input_data={
                     'protocol': self.handler.protocol,
                     'body': handler.save(
                         data=action,
-                        job_title=self.handler.tag_list[0],
-                        task_title='Action')
+                        genealogy=self.handler.tag_list + ['Action%s' % action_name])
                 },
                 task_list=action['Action'].get('_role', config.ACTIVITY_TASK_LIST),
                 priority=priority

@@ -12,7 +12,7 @@ class InputHandler(object):
         self.HANDLERS.setdefault('load', {})
         self.HANDLERS.setdefault('save', {})
 
-    def save(self, data, job_title, task_title):
+    def save(self, data, genealogy):
         """Save data by registered function.
         """
         if not self.protocol:
