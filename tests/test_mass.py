@@ -27,8 +27,8 @@ input_handler = InputHandler()
 
 
 @input_handler.saver('local')
-def save_to_local(data, job_title, task_title):
-    file_path = '/tmp/Job_%s_Task_%s_%d.job' % (job_title, task_title, time.time())
+def save_to_local(data, genealogy):
+    file_path = '/tmp/%s__%d.job' % ('__'.join(genealogy), time.time())
     with open(file_path, 'w') as f:
         f.write(json.dumps(data))
     return file_path
@@ -134,9 +134,12 @@ def get_close_status(workflow_id, run_id):
 
 
 def test_start_job(worker, submit_job):
-    with Job('Job') as job:
-        with Task('Task'):
+    with Job('JobName') as job:
+        with Task('TaskName'):
+            with Task('SubTaskName'):
+                Action(msg='Action here at $(date).', _role='echo')
             Action(msg='Action here at $(date).', _role='echo')
+        Action(msg='Action here at $(date).', _role='echo')
 
     workflow_id, run_id = submit_job(job)
 
