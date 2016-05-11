@@ -29,9 +29,10 @@ def submit(job, protocol=None, priority=1, scheduler='swf'):
                       read_timeout=config.READ_TIMEOUT))
     handler = InputHandler(protocol)
 
+    job_title = job['Job']['title']
     res = client.start_workflow_execution(
         domain=config.DOMAIN,
-        workflowId=job.title,
+        workflowId=job_title,
         workflowType=config.WORKFLOW_TYPE_FOR_JOB,
         taskList={'name': config.DECISION_TASK_LIST},
         taskPriority=str(priority),
@@ -39,11 +40,11 @@ def submit(job, protocol=None, priority=1, scheduler='swf'):
             'protocol': protocol,
             'body': handler.save(
                 data=job,
-                genealogy=[job.title]
+                genealogy=[job_title]
             )
         }),
         executionStartToCloseTimeout=str(config.WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT),
-        tagList=[job.title],
+        tagList=[job_title],
         taskStartToCloseTimeout=str(config.DECISION_TASK_START_TO_CLOSE_TIMEOUT),
         childPolicy=config.WORKFLOW_CHILD_POLICY)
-    return job.title, res['runId']
+    return job_title, res['runId']
