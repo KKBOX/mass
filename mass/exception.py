@@ -17,6 +17,12 @@ class TaskError(Exception):
     """
 
     def __init__(self, reason, details=None):
-        super().__init__()
+        super(Exception, self).__init__()
         self.reason = reason
         self.details = details
+
+
+class UnsupportedScheduler(Exception):
+    """Raised while scheduler is not supported.
+    """
+    pass

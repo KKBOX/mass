@@ -8,22 +8,31 @@
 import json
 
 # 3rd-party modules
-import boto3
+from botocore.client import Config
 
 # local modules
+from mass.exception import UnsupportedScheduler
 from mass.input_handler import InputHandler
-from mass.scheduler.swf import config
 
 
-def submit(job, protocol=None, priority=1):
+def submit(job, protocol=None, priority=1, scheduler='swf', domain=None, region=None):
     """Submit mass job to SWF with specific priority.
     """
-    client = boto3.client('swf', region_name=config.REGION)
+    if scheduler != 'swf':
+        raise UnsupportedScheduler(scheduler)
+    from mass.scheduler.swf import config
+    import boto3
+    client = boto3.client(
+        'swf',
+        region_name=region or config.REGION,
+        config=Config(connect_timeout=config.CONNECT_TIMEOUT,
+                      read_timeout=config.READ_TIMEOUT))
     handler = InputHandler(protocol)
 
+    job_title = job['Job']['title']
     res = client.start_workflow_execution(
-        domain=config.DOMAIN,
-        workflowId=job.title,
+        domain=domain or config.DOMAIN,
+        workflowId=job_title,
         workflowType=config.WORKFLOW_TYPE_FOR_JOB,
         taskList={'name': config.DECISION_TASK_LIST},
         taskPriority=str(priority),
@@ -31,12 +40,11 @@ def submit(job, protocol=None, priority=1):
             'protocol': protocol,
             'body': handler.save(
                 data=job,
-                job_title=job.title,
-                task_title=job.title
+                genealogy=[job_title]
             )
         }),
         executionStartToCloseTimeout=str(config.WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT),
-        tagList=[job.title],
+        tagList=[job_title],
         taskStartToCloseTimeout=str(config.DECISION_TASK_START_TO_CLOSE_TIMEOUT),
         childPolicy=config.WORKFLOW_CHILD_POLICY)
-    return job.title, res['runId']
+    return job_title, res['runId']

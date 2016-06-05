@@ -10,6 +10,7 @@ import subprocess
 import time
 
 # 3rd-party modules
+from botocore.client import Config
 from sh import aws
 import arrow
 import boto3
@@ -26,8 +27,8 @@ input_handler = InputHandler()
 
 
 @input_handler.saver('local')
-def save_to_local(data, job_title, task_title):
-    file_path = '/tmp/Job_%s_Task_%s_%d.job' % (job_title, task_title, time.time())
+def save_to_local(data, genealogy):
+    file_path = '/tmp/%s__%d.job' % ('__'.join(genealogy), time.time())
     with open(file_path, 'w') as f:
         f.write(json.dumps(data))
     return file_path
@@ -90,7 +91,11 @@ def submit_job(monkeypatch):
 
 
 def iter_workflow_execution_history(workflow_id, run_id, reverse_order=False, ignore_decision_task=True):
-    client = boto3.client('swf', region_name=config.REGION)
+    client = boto3.client(
+        'swf',
+        region_name=config.REGION,
+        config=Config(connect_timeout=config.CONNECT_TIMEOUT,
+                      read_timeout=config.READ_TIMEOUT))
     paginator = client.get_paginator('get_workflow_execution_history')
     for res in paginator.paginate(
         domain=config.DOMAIN,
@@ -129,9 +134,12 @@ def get_close_status(workflow_id, run_id):
 
 
 def test_start_job(worker, submit_job):
-    with Job('Job') as job:
-        with Task('Task'):
+    with Job('JobName') as job:
+        with Task('TaskName'):
+            with Task('SubTaskName'):
+                Action(msg='Action here at $(date).', _role='echo')
             Action(msg='Action here at $(date).', _role='echo')
+        Action(msg='Action here at $(date).', _role='echo')
 
     workflow_id, run_id = submit_job(job)
 

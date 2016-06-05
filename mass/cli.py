@@ -19,10 +19,12 @@ def cli():
 
 
 @cli.command()
-def init():
-    utils.register_domain()
-    utils.register_workflow_type()
-    utils.register_activity_type()
+@click.option('-d', '--domain', help='Amazon SWF Domain.')
+@click.option('-r', '--region', help='Amazon Region.')
+def init(domain, region):
+    utils.register_domain(domain, region)
+    utils.register_workflow_type(domain, region)
+    utils.register_activity_type(domain, region)
 
 
 @cli.group()
@@ -41,9 +43,16 @@ def monitor():
 
 
 @worker.command('start')
-def worker_start():
-    worker = SWFWorker()
-    worker.start()
+@click.option('-d', '--domain', help='Amazon SWF Domain.')
+@click.option('-r', '--region', help='Amazon Region.')
+def worker_start(domain, region):
+    worker = SWFWorker(domain, region)
+
+    @worker.role('echo')
+    def echo(msg):
+        print(msg)
+
+    worker.start(domain=domain, region=region)
 
 
 @job.command('submit')

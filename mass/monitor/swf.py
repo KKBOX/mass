@@ -6,11 +6,12 @@ from collections import defaultdict
 from datetime import datetime
 
 # 3rd-party modules
+from botocore.client import Config
 import arrow
 import boto3
 
 # local modules
-from mass.workers.swf import config
+from mass.scheduler.swf import config
 
 
 def workflows_to_jobs(workflows):
@@ -52,7 +53,11 @@ def datetime_to_timestamp(data):
 
 
 def list_workflow_executions(region, domain, **kwargs):
-    client = boto3.client('swf', region_name=region)
+    client = boto3.client(
+        'swf',
+        region_name=self.region,
+        config=Config(connect_timeout=config.CONNECT_TIMEOUT,
+                      read_timeout=config.READ_TIMEOUT))
     paginator = client.get_paginator('list_closed_workflow_executions')
     for res in paginator.paginate(domain=domain, **kwargs):
         for workflow in res.get('executionInfos', []):
@@ -64,13 +69,21 @@ def list_workflow_executions(region, domain, **kwargs):
 
 
 def describe_workflow_execution(region, domain, **kwargs):
-    client = boto3.client('swf', region_name=region)
+    client = boto3.client(
+        'swf',
+        region_name=self.region,
+        config=Config(connect_timeout=config.CONNECT_TIMEOUT,
+                      read_timeout=config.READ_TIMEOUT))
     res = client.describe_workflow_execution(domain=domain, **kwargs)
     return res
 
 
 def get_workflow_execution_history(region, domain, **kwargs):
-    client = boto3.client('swf', region_name=region)
+    client = boto3.client(
+        'swf',
+        region_name=self.region,
+        config=Config(connect_timeout=config.CONNECT_TIMEOUT,
+                      read_timeout=config.READ_TIMEOUT))
     paginator = client.get_paginator('get_workflow_execution_history')
     for res in paginator.paginate(domain=domain, **kwargs):
         for event in res['events']:

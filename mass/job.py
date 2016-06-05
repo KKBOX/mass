@@ -50,7 +50,7 @@ class Base(dict):
 
     def __setattr__(self, name, value):
         if name.startswith('_'):
-            super().__setattr__(name, value)
+            super(Base, self).__setattr__(name, value)
         else:
             self[self.__class__.__name__][name] = value
 
@@ -67,7 +67,7 @@ class Job(Base):
 
     def __init__(self, title, **kwargs):
         kwargs['title'] = title
-        super().__init__(**kwargs)
+        super(Job, self).__init__(**kwargs)
 
 
 class Task(Base):
@@ -82,7 +82,7 @@ class Task(Base):
 
     def __init__(self, title, **kwargs):
         kwargs['title'] = title
-        super().__init__(**kwargs)
+        super(Task, self).__init__(**kwargs)
 
 
 class Action(Base):
@@ -97,6 +97,8 @@ class Action(Base):
             function.
     """
 
-    def __init__(self, *, _role=None, _whenerror=False, **kwargs):
-        super().__init__(_role=_role, _whenerror=_whenerror, **kwargs)
+    def __init__(self, **kwargs):
+        _role = kwargs.pop('_role', None)
+        _whenerror = kwargs.pop('_whenerror', False)
+        super(Action, self).__init__(_role=_role, _whenerror=_whenerror, **kwargs)
         self['Action'].pop('children')

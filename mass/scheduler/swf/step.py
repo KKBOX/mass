@@ -42,7 +42,7 @@ class Event(object):
         elif swf_name in event_attrs.get('workflowExecution', {}):
             return event_attrs['workflowExecution'][swf_name]
         else:
-            raise AttributeError('Attribute is not found')
+            return None
 
 
 class Step(object):
@@ -63,11 +63,17 @@ class Step(object):
         return init_event.event_timestamp
 
     def error(self):
-        events = [e for e in self._events if e.event_type.endswith('Failed')]
+        events = [e for e in self._events
+                  if e.event_type.endswith('Failed')
+                  or e.event_type.endswith('TimedOut')]
         if not events:
             return None
         else:
-            return StepError(events[0].reason, events[0].details)
+            event = events[0]  # latest error event
+            if event.event_type.endswith('Failed'):
+                return StepError(event.reason, event.details)
+            elif event.event_type.endswith('TimedOut'):
+                return StepError(event.timeout_type, None)
 
     def init_event(self):
         raise NotImplementedError
@@ -143,8 +149,8 @@ class ActivityTask(Step):
     def schedule(cls, decisions, name, input_data, task_list, priority):
         decisions.schedule_activity_task(
             activity_id=name,
-            activity_type_name=config.ACTIVITY_TYPE_FOR_CMD['name'],
-            activity_type_version=config.ACTIVITY_TYPE_FOR_CMD['version'],
+            activity_type_name=config.ACTIVITY_TYPE_FOR_ACTION['name'],
+            activity_type_version=config.ACTIVITY_TYPE_FOR_ACTION['version'],
             task_list=task_list,
             task_priority=str(priority),
             control=None,
