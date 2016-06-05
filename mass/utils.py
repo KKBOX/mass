@@ -15,7 +15,7 @@ from mass.exception import UnsupportedScheduler
 from mass.input_handler import InputHandler
 
 
-def submit(job, protocol=None, priority=1, scheduler='swf'):
+def submit(job, protocol=None, priority=1, scheduler='swf', domain=None, region=None):
     """Submit mass job to SWF with specific priority.
     """
     if scheduler != 'swf':
@@ -24,14 +24,14 @@ def submit(job, protocol=None, priority=1, scheduler='swf'):
     import boto3
     client = boto3.client(
         'swf',
-        region_name=config.REGION,
+        region_name=region or config.REGION,
         config=Config(connect_timeout=config.CONNECT_TIMEOUT,
                       read_timeout=config.READ_TIMEOUT))
     handler = InputHandler(protocol)
 
     job_title = job['Job']['title']
     res = client.start_workflow_execution(
-        domain=config.DOMAIN,
+        domain=domain or config.DOMAIN,
         workflowId=job_title,
         workflowType=config.WORKFLOW_TYPE_FOR_JOB,
         taskList={'name': config.DECISION_TASK_LIST},
