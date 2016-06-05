@@ -10,7 +10,7 @@ video encoding, rendering for computer graphics, DB dump, or complex algorithm o
 The above is copied from [Luigi](https://github.com/spotify/luigi) by Spotify
 because of the nature of laziness.
 
-[![Build Status](https://travis-ci.org/drakeguan/mass.svg?branch=develop)](https://travis-ci.org/drakeguan/mass)
+[![Build Status](https://travis-ci.org/drakeguan/mass.svg?branch=master)](https://travis-ci.org/drakeguan/mass)
 
 
 # Why another pipeline tool/framework?
@@ -268,7 +268,7 @@ It is because alfscript is designed to run commandline scripts only.
 If you are curious, you can refer to https://renderman.pixar.com/resources/current/tractor/scripting.html.
 
 ```tcl
-Job 
+Job
     -title {Convert a Youtube video into some videos and audios}
     -serialsubtasks 1
     -subtasks {
@@ -276,17 +276,17 @@ Job
             -cmds {
                 Cmd {youtube-dl https://www.youtube.com/watch?v=BI23U7U2aUY -o storytelling.mp4}
             }
-        Task {Transcoding} 
+        Task {Transcoding}
             -subtasks {
-                Task {Transcoding to profile #0} 
+                Task {Transcoding to profile #0}
                     -cmds {
                         Cmd {ffmpeg -loglevel fatal -y -i storytelling.mp4 -c:v libx264 -b:v 128k -c:a copy -f mp4 output_0.mp4}
                     }
-                Task {Transcoding to profile #1} 
+                Task {Transcoding to profile #1}
                     -cmds {
                         Cmd {ffmpeg -loglevel fatal -y -i storytelling.mp4 -c:v libx264 -b:v 250k -c:a copy -f mp4 output_0.mp4}
                     }
-                Task {Transcoding to profile #2, audio only} 
+                Task {Transcoding to profile #2, audio only}
                     -cmds {
                         Cmd {ffmpeg -loglevel fatal -y -i storytelling.mp4 -vn -c:a libfdk_aac -b:a 96k output_2.mp4}
                     }
