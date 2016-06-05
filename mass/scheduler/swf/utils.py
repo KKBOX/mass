@@ -16,17 +16,17 @@ import boto3
 from mass.scheduler.swf import config
 
 
-def register_domain():
+def register_domain(domain=None, region=None):
     client = boto3.client(
         'swf',
-        region_name=config.REGION,
+        region_name=region or config.REGION,
         config=Config(connect_timeout=config.CONNECT_TIMEOUT,
                       read_timeout=config.READ_TIMEOUT))
 
     # register domain for Mass
     try:
         res = client.register_domain(
-            name=config.DOMAIN,
+            name=domain or config.DOMAIN,
             description='The SWF domain for Mass',
             workflowExecutionRetentionPeriodInDays=str(
                 int(math.ceil(float(config.WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT) / 60 / 60 / 24)))
@@ -36,17 +36,17 @@ def register_domain():
         pass
 
 
-def register_workflow_type():
+def register_workflow_type(domain=None, region=None):
     client = boto3.client(
         'swf',
-        region_name=config.REGION,
+        region_name=region or config.REGION,
         config=Config(connect_timeout=config.CONNECT_TIMEOUT,
                       read_timeout=config.READ_TIMEOUT))
 
     # register workflow type for Job
     try:
         res = client.register_workflow_type(
-            domain=config.DOMAIN,
+            domain=domain or config.DOMAIN,
             name=config.WORKFLOW_TYPE_FOR_JOB['name'],
             version=config.WORKFLOW_TYPE_FOR_JOB['version'],
             description='The SWF workflow type for Job of Mass.',
@@ -63,7 +63,7 @@ def register_workflow_type():
     # register workflow type for Task
     try:
         res = client.register_workflow_type(
-            domain=config.DOMAIN,
+            domain=domain or config.DOMAIN,
             name=config.WORKFLOW_TYPE_FOR_TASK['name'],
             version=config.WORKFLOW_TYPE_FOR_TASK['version'],
             description='The SWF workflow type for Job of Mass.',
@@ -78,17 +78,17 @@ def register_workflow_type():
         pass
 
 
-def register_activity_type():
+def register_activity_type(domain=None, region=None):
     client = boto3.client(
         'swf',
-        region_name=config.REGION,
+        region_name=region or config.REGION,
         config=Config(connect_timeout=config.CONNECT_TIMEOUT,
                       read_timeout=config.READ_TIMEOUT))
 
     # register activity type for Cmd
     try:
         res = client.register_activity_type(
-            domain=config.DOMAIN,
+            domain=domain or config.DOMAIN,
             name=config.ACTIVITY_TYPE_FOR_ACTION['name'],
             version=config.ACTIVITY_TYPE_FOR_ACTION['version'],
             description='The SWF activity type for Cmd of Mass.',
