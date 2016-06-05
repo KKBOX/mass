@@ -327,7 +327,7 @@ class SWFWorker(BaseWorker):
                 details=result['details'][:config.MAX_DETAIL_SIZE],
                 reason=result['reason'][:config.MAX_REASON_SIZE])
 
-    def start(self, farm=None):
+    def start(self, farm=None, domain=None, region=None):
         """Start workers for each role.
 
         The default number of workers for each role is 1. This setting could
@@ -355,13 +355,13 @@ class SWFWorker(BaseWorker):
             processes.append(p)
 
         # start decider
-        decider = SWFDecider(config.DOMAIN, config.REGION)
+        decider = SWFDecider(domain or config.DOMAIN, region or config.REGION)
         start_proc(decider.run, args=(config.DECISION_TASK_LIST,))
 
         # start worker
         for task_list, number in farm.items():
             for _ in range(number):
-                worker = self.__class__(config.DOMAIN, config.REGION)
+                worker = self.__class__(domain or config.DOMAIN, region or config.REGION)
                 start_proc(worker.run, args=(task_list,))
 
         def sig_handler(signum, frame):
