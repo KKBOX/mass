@@ -2,12 +2,14 @@
 # -*- coding: utf-8 -*-
 
 # built-in modules
+from __future__ import print_function
 from datetime import timedelta
 from multiprocessing import Process
 import json
 import os
 import subprocess
 import time
+import traceback
 
 # 3rd-party modules
 from botocore.client import Config
@@ -53,6 +55,21 @@ def worker(request):
     def run(cmd):
         output = subprocess.check_output(cmd, shell=True)
         print(output)
+
+    @worker.handle(Exception)
+    def handle_error(etype, value, tb, func, kwargs):
+        print('=== type ===')
+        print(type(etype), etype)
+        print('=== value ===')
+        print(type(value), value)
+        print('=== traceback ===')
+        print(''.join(traceback.format_tb(tb)))
+        format_exc = ''.join(traceback.format_exception(etype, value, tb, limit=None))
+        print('=== func ===')
+        print(func)
+        print('=== kwargs ===')
+        print(json.dumps(kwargs))
+
     p = Process(target=worker.start, kwargs={'farm': {'echo': 1, 'shell': 2}})
     p.start()
 
