@@ -57,7 +57,7 @@ def worker(request):
         print(output)
 
     @worker.handle(Exception)
-    def handle_error(etype, value, tb, func, kwargs):
+    def handle_error(etype, value, tb, role, func, kwargs):
         print('=== type ===')
         print(type(etype), etype)
         print('=== value ===')
@@ -65,6 +65,8 @@ def worker(request):
         print('=== traceback ===')
         print(''.join(traceback.format_tb(tb)))
         format_exc = ''.join(traceback.format_exception(etype, value, tb, limit=None))
+        print('=== role ===')
+        print(role)
         print('=== func ===')
         print(func)
         print('=== kwargs ===')
