@@ -37,13 +37,14 @@ class BaseWorker(object):
 
         The inputs of handler function:
         * etype, value, tb: from sys.exc_info()
+        * role: role name
         * func: role function
         * kwargs: input of role function
 
         Example:
 
         @worker.handle(Exception)
-        def handler(etype, value, tb, func, kwargs):
+        def handler(etype, value, tb, role, func, kwargs):
             format_exc = ''.join(traceback.format_exception(etype, value, tb, limit=None))
             print(format_exc)
         """
